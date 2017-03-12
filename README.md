@@ -1,5 +1,7 @@
 # OnionSkinRenderer
 
+Hello there, I am an animator with some programming skills. If you are a programmer and roll your eyes going through my code, please point out any mistakes I made :)
+
 I started writing this plugin after I finished a 2D animation project. Going back to 3D I really missed
 the onion skinning features of 2D applications and wondered if it wouldn't be possible to have it in 3D.
 I know there are solutions like [bhGhost](http://www.graphite9.com/MayaDownloads.html) but they come with a render overhead and
