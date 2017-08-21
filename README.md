@@ -37,7 +37,7 @@ C:\Users\[username]\Documents\maya\scripts
 
 ##How to use
 Open the UI with
-
+'''
 import onionSkinRenderer.onionSkinRendererWindow as onionWindow
 import onionSkinRenderer.onionSkinRendererCore as onionCore
 if __name__ == "__main__":
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     onionUI = onionWindow.OnionSkinRendererWindow()
     onionUI.show()
-
+'''
 
 With the UI open a new renderer appears (Onion Skin Renderer) in the dropdown where you can choose between Viewport 2.0 and Legacy Viewport. Select it.
 Select an object and add it to Onion Objects
