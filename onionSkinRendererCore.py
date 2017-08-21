@@ -3,6 +3,9 @@ import maya.api.OpenMayaRender as omr
 import maya.api.OpenMayaAnim as oma
 import maya.api.OpenMayaUI as omui
 import pymel.core as pm
+import os
+import inspect
+import traceback
 
 """
 This code is a render override for displaying onion skin overlays in the 3D viewport,
@@ -24,6 +27,7 @@ TODO
 -some interaction with maya causes the onions to become invalid(not correct),
     e.g. rotating camera, adding/removing objs from onion list
     in this case the onions shouldn't be displayed unless they are updated
+-show next keyframes
 """
 
 
@@ -35,6 +39,7 @@ start here to see whats wrong
 kDebugAll = False
 kDebugRenderOverride = False
 kDebugSceneRender = False
+kDebugQuadRender = False
 kPluginName = "Onion Skin Renderer"
 
 
@@ -54,73 +59,27 @@ This tells M your name and that you are available for work
 viewRenderOverrideInstance = None
 
 # init
-def initializePlugin(obj):
-    plugin = om.MFnPlugin(obj, "Lendenfeld", "0.1", "Any")
+def initializeOverride():
     try:
+        # register the path to the plugin
+        omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
         global viewRenderOverrideInstance
         viewRenderOverrideInstance = viewRenderOverride("onionSkinRenderer")
         omr.MRenderer.registerOverride(viewRenderOverrideInstance)
-        plugin.registerCommand(
-            addOnionFrameCMD.kCommandName,
-            addOnionFrameCMD.cmdCreator,
-            addOnionFrameCMD.syntaxCreator
-        )
-        plugin.registerCommand(
-            removeOnionFrameCMD.kCommandName,
-            removeOnionFrameCMD.cmdCreator,
-            removeOnionFrameCMD.syntaxCreator
-        )
-        plugin.registerCommand(
-            addOnionObjectCMD.kCommandName,
-            addOnionObjectCMD.cmdCreator,
-            addOnionObjectCMD.syntaxCreator
-        )
-        plugin.registerCommand(
-            removeOnionObjectCMD.kCommandName,
-            removeOnionObjectCMD.cmdCreator,
-            removeOnionObjectCMD.syntaxCreator
-        )
-        plugin.registerCommand(
-            addSelectedAsOnionCMD.kCommandName,
-            addSelectedAsOnionCMD.cmdCreator,
-            addSelectedAsOnionCMD.syntaxCreator
-        )
-        plugin.registerCommand(
-            removeSelectedFromOnionCMD.kCommandName,
-            removeSelectedFromOnionCMD.cmdCreator,
-            removeSelectedFromOnionCMD.syntaxCreator
-        )
-        plugin.registerCommand(
-            setRelativeOnionDisplayCMD.kCommandName,
-            setRelativeOnionDisplayCMD.cmdCreator,
-            setRelativeOnionDisplayCMD.syntaxCreator
-        )
-        plugin.registerCommand(
-            getOnionListCMD.kCommandName,
-            getOnionListCMD.cmdCreator,
-            getOnionListCMD.syntaxCreator
-        )
     except:
         raise Exception("Failed to register plugin %s" % kPluginName)
+        
 
 # un-init
-def uninitializePlugin(obj):
-    plugin = om.MFnPlugin(obj)
+def uninitializeOverride():
     try:
         global viewRenderOverrideInstance
         if viewRenderOverrideInstance is not None:
             omr.MRenderer.deregisterOverride(viewRenderOverrideInstance)
             viewRenderOverrideInstance = None
-            plugin.deregisterCommand(addOnionFrameCMD.kCommandName)
-            plugin.deregisterCommand(removeOnionFrameCMD.kCommandName)
-            plugin.deregisterCommand(addOnionObjectCMD.kCommandName)
-            plugin.deregisterCommand(removeOnionObjectCMD.kCommandName)
-            plugin.deregisterCommand(addSelectedAsOnionCMD.kCommandName)
-            plugin.deregisterCommand(removeSelectedFromOnionCMD.kCommandName)
-            plugin.deregisterCommand(setRelativeOnionDisplayCMD.kCommandName)
-            plugin.deregisterCommand(getOnionListCMD.kCommandName)
     except:
         raise Exception("Failed to unregister plugin %s" % kPluginName)
+        
 
 
 """
@@ -135,7 +94,9 @@ class viewRenderOverride(omr.MRenderOverride):
     def __init__(self, name):
         if kDebugAll or kDebugRenderOverride:
             print ("Initializing viewRenderOverride")
-        omr.MRenderOverride.__init__(self, name)
+
+        #omr.MRenderOverride.__init__(self, name)
+        super(viewRenderOverride, self).__init__(name)
         # name in the renderer dropdown menu
         self.mUIName = kPluginName
         # everytime you are preparing a plate,
@@ -147,12 +108,14 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mCurrentFrame = 0
         # holds all avaialable onions
         # the key to the target is its frame number
-        self.mOnionTargets = {}
+        self.mOnionBuffer = {}
         # sometimes M doesn't want to see onions,
         # thats when this should be False
         self.mEnableBlend = False
-        # remember which onions M wants you to display
-        self.mDisplayOnions = {}
+        # save the relative Onions
+        self.mRelativeOnions = {}
+        # save the absolute onions
+        self.mAbsoluteOnions = {}
         # Usually display onions depending on the current time,
         # but sometimes it's nice to have them absolute
         self.mRelativeOnionDisplay = True
@@ -160,6 +123,14 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOnionObjectList = om.MSelectionList()
         # store the render operations that combine onions in a list
         self.mRenderOperations = []
+        # the tints for onions
+        self.mRelativeFutureTint = [255,0,0]
+        self.mRelativePastTint = [0,255,0]
+        self.mAbsoluteTint = [0,0,255]
+        # tint strengths, 1 is full tint
+        self.mRelativeTintStrength = 1.0
+        self.mAbsoluteTintStrength = 1.0
+
 
         # Passes
         self.mClearPass = viewRenderClearRender("clearPass")
@@ -223,13 +194,13 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOnionObjectList = None
         self.mAnim = None
 
+
+    # -----------------
+    # RENDER FUNCTIONS
+
     # specify that openGl and Directx11 are supported
     def supportedDrawAPIs(self):
-        return (
-            omr.MRenderer.kOpenGL |
-            omr.MRenderer.kOpenGLCoreProfile |
-            omr.MRenderer.kDirectX11
-        )
+        return omr.MRenderer.kAllDevices
 
     # before sorting veggies on your plate, prepare your workspace
     def setup(self, destination):
@@ -252,27 +223,56 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOnionTargetDescr.setName(onionTargetName)
         
         # if the onion is not buffered do so, otherwise update the buffered
-        if self.mCurrentFrame not in self.mOnionTargets:
-            self.mOnionTargets[self.mCurrentFrame] = self.mTargetMgr.acquireRenderTarget(self.mOnionTargetDescr)
+        if self.mCurrentFrame not in self.mOnionBuffer:
+            self.mOnionBuffer[self.mCurrentFrame] = self.mTargetMgr.acquireRenderTarget(self.mOnionTargetDescr)
         else:
-            self.mOnionTargets.get(self.mCurrentFrame).updateDescription(self.mOnionTargetDescr)
+            self.mOnionBuffer.get(self.mCurrentFrame).updateDescription(self.mOnionTargetDescr)
         # then set the render target to the appropriate onion
-        self.mOnionPass.setRenderTarget(self.mOnionTargets.get(self.mCurrentFrame))
+        self.mOnionPass.setRenderTarget(self.mOnionBuffer.get(self.mCurrentFrame))
         # set the filter list to the onion renderer
         self.mOnionPass.setObjectFilterList(self.mOnionObjectList)
 
-        # iterating over all blend passes and setting the targets
-        for blend in self.mDisplayOnions:
-            blendPass = self.mDisplayOnions[blend]
-            if self.mRelativeOnionDisplay:
-                targetFrame = blendPass.mFrame + self.mCurrentFrame
-            else:
-                targetFrame = blendPass.mFrame
-            if targetFrame in self.mOnionTargets:
+        # setting targets to relative blend passes
+        for blend in self.mRelativeOnions:
+            blendPass = self.mRelativeOnions[blend]
+            targetFrame = blendPass.mFrame + self.mCurrentFrame
+
+            if targetFrame in self.mOnionBuffer:
                 blendPass.setActive(True)
-                blendPass.setInputTargets(self.mStandardTarget, self.mOnionTargets[targetFrame])
+                blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[targetFrame])
+                # future tint
+                if targetFrame > self.mCurrentFrame:
+                    blendPass.setTint((
+                        (self.mRelativeFutureTint[0]/255.0) / self.lerp(1.0, self.mRelativeFutureTint[0]/255.0, self.mRelativeTintStrength),
+                        self.mRelativeFutureTint[1]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[1]/255.0, self.mRelativeTintStrength), 
+                        self.mRelativeFutureTint[2]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[2]/255.0, self.mRelativeTintStrength), 
+                        1.0))
+                # past tint
+                else:
+                    blendPass.setTint((
+                        self.mRelativePastTint[0]/255.0 / self.lerp(1.0, self.mRelativePastTint[0]/255.0, self.mRelativeTintStrength),
+                        self.mRelativePastTint[1]/255.0 / self.lerp(1.0, self.mRelativePastTint[1]/255.0, self.mRelativeTintStrength), 
+                        self.mRelativePastTint[2]/255.0 / self.lerp(1.0, self.mRelativePastTint[2]/255.0, self.mRelativeTintStrength),  
+                        1.0))
             else:
                 blendPass.setActive(False)
+
+        # setting targets to absolute blendPasses
+        for blend in self.mAbsoluteOnions:
+            blendPass = self.mAbsoluteOnions[blend]
+            
+            if blendPass.mFrame in self.mOnionBuffer:
+                blendPass.setActive(True)
+                blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[blendPass.mFrame])
+                blendPass.setTint((
+                    self.mAbsoluteTint[0]/255.0 / self.lerp(1.0, self.mAbsoluteTint[0]/255.0, self.mAbsoluteTintStrength),
+                    self.mAbsoluteTint[1]/255.0 / self.lerp(1.0, self.mAbsoluteTint[1]/255.0, self.mAbsoluteTintStrength),
+                    self.mAbsoluteTint[2]/255.0 / self.lerp(1.0, self.mAbsoluteTint[2]/255.0, self.mAbsoluteTintStrength)
+                ))
+            else:
+                blendPass.setActive(False)
+
+            
 
     # called by maya to start iterating through passes
     def startOperationIterator(self):
@@ -290,73 +290,155 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOperation = self.mOperation + 1
         return self.mOperation < len(self.mRenderOperations)
 
+
+    # -----------------
+    # UTILITY FUNCTIONS
+
+    # reducing code duplicates by merging both add onion functions
+    def addOnion(self, frame, opacity, targetDict):
+        if frame not in targetDict:
+            targetDict[frame] = viewRenderQuadRender(
+                'blendPass%s' % frame,
+                omr.MClearOperation.kClearNone,
+                int(frame)
+            )
+            targetDict[frame].setOpacity(opacity/100.0)
+            targetDict[frame].setShader(viewRenderQuadRender.kSceneBlend)
+            targetDict[frame].setRenderTarget(self.mStandardTarget)
+
+            # insert operation after onion pass
+            self.mRenderOperations.insert(
+                self.mRenderOperations.index(self.mOnionPass) + 1,
+                targetDict[frame]
+            )
+
+
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    # called by absolute and relative remove
+    def removeOnion(self, frame, targetDict):
+        if frame in targetDict:
+            renderPass = targetDict.pop(frame, None)
+            self.mRenderOperations.remove(renderPass)
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
     # called by maya. Sets the name in the "Renderers" dropdown
     def uiName(self):
         return self.mUIName
     
     #
-    def addDisplayOnion(self, frame):
-        if frame not in self.mDisplayOnions:
-            self.mDisplayOnions[frame] = viewRenderQuadRender(
-                "blendPass%s" % frame,
-                omr.MClearOperation.kClearNone,
-                frame
-            )
-            self.mDisplayOnions[frame].setShader(viewRenderQuadRender.kSceneBlend)
-            self.mDisplayOnions[frame].setRenderTarget(self.mStandardTarget)
-
-            self.mRenderOperations.insert(
-                self.mRenderOperations.index(self.mOnionPass) + 1,
-                self.mDisplayOnions[frame]
-            )
+    def rotOnions(self):
+        if self.mTargetMgr is not None:
+            for target in self.mOnionBuffer:
+                self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer.get(target))
+        self.mOnionBuffer.clear()
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     #
-    def removeDisplayOnion(self, frame):
-        if frame in self.mDisplayOnions:
-            renderPass = self.mDisplayOnions.pop(frame, None)
-            self.mRenderOperations.remove(renderPass)
+    def lerp(self, start, end, factor):
+        if factor < 1 and factor > 0:
+            return (factor * start) + ((1-factor) * end)
+        else:
+            return start
+
+
+    # ----------------
+    # INTERFACE FUNCTIONS
+
+    # add a frame to display relative to current time slider position
+    def addRelativeOnion(self, frame, opacity):
+        self.addOnion(int(frame), opacity, self.mRelativeOnions)
+
+    #
+    def removeRelativeOnion(self, frame):
+        self.removeOnion(int(frame), self.mRelativeOnions)
+    
+    # add a frame that is always displayed on the current position
+    def addAbsoluteOnion(self, frame, opacity):
+        self.addOnion(int(frame), opacity, self.mAbsoluteOnions)
+    
+    #
+    def removeAbsoluteOnion(self, frame):
+        self.removeOnion(int(frame), self.mAbsoluteOnions)
+
+    #
+    def clearAbsoluteOnions(self):
+        for onion in self.mAbsoluteOnions:
+            self.mRenderOperations.remove(self.mAbsoluteOnions[onion])
+        self.mAbsoluteOnions.clear()
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     #
-    def addOnionObject(self, obj):
-        self.mOnionObjectList.add(obj)
-        self.rotOnions()
+    def absoluteOnionExists(self, frame):
+        return frame in self.mAbsoluteOnions
 
     #
-    def removeOnionObject(self, obj):
-        tmpList = om.MSelectionList()
-        tmpList.add(obj)
-        self.mOnionObjectList.merge(tmpList, om.MSelectionList.kRemoveFromList)
-        self.rotOnions()
+    def getAbsoluteOpacity(self, frame):
+        if frame in self.mAbsoluteOnions:
+            return self.mAbsoluteOnions[frame].mOpacity * 100
+        
+        return 50
+
+    # 
+    def setTint(self, rgba, target):
+        if target == 'relative_futureTint_btn':
+            self.mRelativeFutureTint = rgba
+        elif target == 'relative_pastTint_btn':
+            self.mRelativePastTint = rgba
+        elif target == 'absolute_tint_btn':
+            self.mAbsoluteTint = rgba
+
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+    
+    #
+    def setRelativeTintStrength(self, strength):
+        self.mRelativeTintStrength = strength / 100.0
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     #
-    def addSelectedAsOnion(self):
+    def setAbsoluteTintStrength(self, strength):
+        self.mAbsoluteTintStrength = strength / 100.0
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    #
+    def setRelativeOpacity(self, frame, opacity):
+        if int(frame) in self.mRelativeOnions:
+            self.mRelativeOnions[int(frame)].setOpacity(opacity/100.0)
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    #
+    def setAbsoluteOpacity(self, frame, opacity):
+        if frame in self.mAbsoluteOnions:
+            self.mAbsoluteOnions[frame].setOpacity(opacity/100.0)
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    #
+    def addSelectedOnion(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
             self.mOnionObjectList.merge(selList)
         self.rotOnions()
 
     #
-    def removeSelectedFromOnion(self):
+    def removeSelectedOnion(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
             self.mOnionObjectList.merge(selList, om.MSelectionList.kRemoveFromList)
         self.rotOnions()
 
     #
-    def rotOnions(self):
-        if self.mTargetMgr is not None:
-            for target in self.mOnionTargets:
-                self.mTargetMgr.releaseRenderTarget(self.mOnionTargets.get(target))
-        self.mOnionTargets.clear()
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+    def removeOnionObject(self, dagPath):
+        tmpList = om.MSelectionList()
+        tmpList.add(dagPath)
+        self.mOnionObjectList.merge(tmpList, om.MSelectionList.kRemoveFromList)
+        self.rotOnions()
 
     #
-    def setRelativeOnionDisplay(self, flag):
-        self.mRelativeOnionDisplay = flag
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+    def clearOnionObjects(self):
+        self.mOnionObjectList = om.MSelectionList()
+        self.rotOnions()
 
+    
 
 
 """
@@ -371,7 +453,8 @@ class viewRenderSceneRender(omr.MSceneRender):
     def __init__(self, name, clearMask):
         if kDebugAll or kDebugSceneRender:
             print ("Initializing viewRenderSceneRender")
-        omr.MSceneRender.__init__(self, name)
+        #omr.MSceneRender.__init__(self, name)
+        super(viewRenderSceneRender,self).__init__(name, 'Onion')
         self.mClearMask = clearMask
         self.mPanelName = ""
         self.mDrawSelectionFilter = False
@@ -397,6 +480,7 @@ class viewRenderSceneRender(omr.MSceneRender):
 
     # sets the clear mask
     def clearOperation(self):
+        self.mClearOperation.setClearColor((0.0, 0.0, 0.0, 0.0))
         self.mClearOperation.setMask(self.mClearMask)
         return self.mClearOperation
 
@@ -448,6 +532,10 @@ class viewRenderQuadRender(omr.MQuadRender):
 
         self.mActive = True
 
+        self.mTint = [1,1,1,1]
+
+        self.mOpacity = 0.5
+
         
 
     def __del__(self):
@@ -462,7 +550,7 @@ class viewRenderQuadRender(omr.MQuadRender):
         self.mInputTarget = None
 
     def shader(self):
-        if kDebugAll:
+        if kDebugAll or kDebugQuadRender:
             print ("Setting up shader")
         if not self.mActive:
             return None
@@ -470,15 +558,15 @@ class viewRenderQuadRender(omr.MQuadRender):
         if self.mShaderInstance is None:
             shaderMgr = omr.MRenderer.getShaderManager()
             if self.mShader == self.kSceneBlend:
-                # other technique would be Main
-                self.mShaderInstance = shaderMgr.getEffectsFileShader("Blend", "Add")
+                self.mShaderInstance = shaderMgr.getEffectsFileShader("onionSkinShader", "Main", useEffectCache = False)
         if self.mShaderInstance is not None:
-            if kDebugAll:
+            if kDebugAll or kDebugQuadRender:
                 print ("Blend target 1: %s" % self.mInputTarget[0])
                 print ("Blend target 2: %s" % self.mInputTarget[1])
             self.mShaderInstance.setParameter("gSourceTex", self.mInputTarget[0])
             self.mShaderInstance.setParameter("gSourceTex2", self.mInputTarget[1])
-            self.mShaderInstance.setParameter("gBlendSrc", 0.1)
+            self.mShaderInstance.setParameter("gBlendSrc", self.mOpacity)
+            self.mShaderInstance.setParameter("gTint", self.mTint)
 
         return self.mShaderInstance
 
@@ -503,6 +591,13 @@ class viewRenderQuadRender(omr.MQuadRender):
     
     def setActive(self, flag):
         self.mActive = flag
+
+    def setTint(self, tint):
+        self.mTint = tint
+    
+    def setOpacity(self, opacity):
+        self.mOpacity = opacity
+
 
 
 """
@@ -570,242 +665,7 @@ class viewRenderPresentTarget(omr.MPresentTarget):
     def setRenderTarget(self, target):
         self.mTarget = target
 
-"""
-Unfortunately you can't talk to M directly,
-If she requires onions she will call this command
-"""
-class addOnionFrameCMD(om.MPxCommand):
-    kCommandName = "addOnionFrame"
 
-    def __init__(self):
-        om.MPxCommand.__init__(self)
+def getStuff():
+    print 'getting stuff'
 
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            frame = argData.commandArgumentInt(0)
-            viewRenderOverrideInstance.addDisplayOnion(frame)
-
-    @classmethod
-    def cmdCreator(cls):
-        return addOnionFrameCMD()
-    
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.addArg(om.MSyntax.kDouble)
-        return syntax
-
-"""
-"""
-class removeOnionFrameCMD(om.MPxCommand):
-    kCommandName = "removeOnionFrame"
-
-    def __init__(self):
-        om.MPxCommand.__init__(self)
-
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            frame = argData.commandArgumentInt(0)
-            viewRenderOverrideInstance.removeDisplayOnion(frame)
-
-    @classmethod
-    def cmdCreator(cls):
-        return removeOnionFrameCMD()
-    
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.addArg(om.MSyntax.kDouble)
-        return syntax
-
-"""
-"""
-class addOnionObjectCMD(om.MPxCommand):
-    kCommandName = "addOnionObject"
-
-    def __init__(self):
-        om.MPxCommand.__init__(self)
-
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            obj = argData.commandArgumentString(0)
-            viewRenderOverrideInstance.addOnionObject(obj)
-
-    @classmethod
-    def cmdCreator(cls):
-        return addOnionObjectCMD()
-    
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.addArg(om.MSyntax.kString)
-        return syntax
-
-"""
-"""
-class removeOnionObjectCMD(om.MPxCommand):
-    kCommandName = "removeOnionObject"
-
-    def __init__(self):
-        om.MPxCommand.__init__(self)
-
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            obj = argData.commandArgumentString(0)
-            viewRenderOverrideInstance.removeOnionObject(obj)
-
-    @classmethod
-    def cmdCreator(cls):
-        return removeOnionObjectCMD()
-    
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.addArg(om.MSyntax.kString)
-        return syntax
-
-                      
-"""
-"""
-class addSelectedAsOnionCMD(om.MPxCommand):
-    kCommandName = "addSelectedAsOnion"
-
-    def __init__(self):
-        om.MPxCommand.__init__(self)
-
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            viewRenderOverrideInstance.addSelectedAsOnion()
-
-    @classmethod
-    def cmdCreator(cls):
-        return addSelectedAsOnionCMD()
-
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.kNoArg
-        return syntax
-
-
-"""
-"""
-class removeSelectedFromOnionCMD(om.MPxCommand):
-    kCommandName = "removeSelectedFromOnion"
-
-    def __init__(self):
-        om.MPxCommand.__init__(self)
-
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            viewRenderOverrideInstance.removeSelectedFromOnion()
-
-    @classmethod
-    def cmdCreator(cls):
-        return removeSelectedFromOnionCMD()
-
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.kNoArg
-        return syntax
-
-"""
-"""
-class setRelativeOnionDisplayCMD(om.MPxCommand):
-    kCommandName = "setRelativeOnionDisplay"
-
-    def __init__(self):
-        om.MPxCommand.__init__(self)
-
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            obj = argData.commandArgumentBool(0)
-            viewRenderOverrideInstance.setRelativeOnionDisplay(obj)
-
-    @classmethod
-    def cmdCreator(cls):
-        return setRelativeOnionDisplayCMD()
-
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.addArg(om.MSyntax.kBoolean)
-        return syntax
-
-
-"""
-"""
-class getOnionListCMD(om.MPxCommand):
-    kCommandName = "getOnionList"
-    kListType = "t"
-    kListTypeLong = "listType"
-
-    def __init__(self):
-        om.MPxCommand.__init__(self)
-
-    def doIt(self, args):
-        try:
-            argData = om.MArgDatabase(self.syntax(), args)
-        except:
-            pass
-        else:
-            global viewRenderOverrideInstance
-            self.clearResult()
-            if argData.isFlagSet(getOnionListCMD.kListType):
-                listType = argData.flagArgumentInt(getOnionListCMD.kListType, 0)
-                if listType is 0:
-                    objectList = viewRenderOverrideInstance.mOnionObjectList.getSelectionStrings()
-                    self.setResult(objectList)
-                else:
-                    frameList = viewRenderOverrideInstance.mDisplayOnions.keys()
-                    self.setResult(frameList)
-        
-    @classmethod
-    def cmdCreator(cls):
-        return getOnionListCMD()
-
-    @classmethod
-    def syntaxCreator(cls):
-        syntax = om.MSyntax()
-        syntax.addFlag(
-            getOnionListCMD.kListType,
-            getOnionListCMD.kListTypeLong,
-            om.MSyntax.kDouble
-        )
-        return syntax
