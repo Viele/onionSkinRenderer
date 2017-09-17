@@ -21,7 +21,7 @@ BE WARNED: The UI will not work woth any other version than 2017 because I used 
 This plugin is an extension to the standard viewport2.0 renderer. When Maya Renders a frame, a pass with the specified objects is created and stored. If you now tell the plugin to display information from another frame, it checks if that exists and if yes, draws it above the geometry.
 
 #### Pros
-1. Little overhead. Since it happens in renderer there is no additional geometry needed. Rendering additional passes per frame is very fast.
+1. Independent of geometry complexity. Any polycount renders at the same speed.
 2. Relative Onion Display. It is easy to display the Onion Relative to the current position because it is all buffered.
 3. Actual display of the shape of the character on a different frame. Maya's internal onions (ghosting) cannot display skinned meshes, so you have to parent locators to it. Which is fine for tracking arcs but not to see how the shape moves through the scene.
 
