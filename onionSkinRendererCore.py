@@ -65,9 +65,10 @@ def initializeOverride():
         omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
         global viewRenderOverrideInstance
         viewRenderOverrideInstance = viewRenderOverride("onionSkinRenderer")
+        viewRenderOverrideInstance.createCallback()
         omr.MRenderer.registerOverride(viewRenderOverrideInstance)
     except:
-        raise Exception("Failed to register plugin %s" % kPluginName)
+        raise Exception("Failed to register plugin %s" %kPluginName)
         
 
 # un-init
@@ -76,6 +77,7 @@ def uninitializeOverride():
         global viewRenderOverrideInstance
         if viewRenderOverrideInstance is not None:
             omr.MRenderer.deregisterOverride(viewRenderOverrideInstance)
+            viewRenderOverrideInstance.deleteCallback()
             viewRenderOverrideInstance = None
     except:
         raise Exception("Failed to unregister plugin %s" % kPluginName)
@@ -116,9 +118,6 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativeOnions = {}
         # save the absolute onions
         self.mAbsoluteOnions = {}
-        # Usually display onions depending on the current time,
-        # but sometimes it's nice to have them absolute
-        self.mRelativeOnionDisplay = True
         # save all the objects to display in a list
         self.mOnionObjectList = om.MSelectionList()
         # store the render operations that combine onions in a list
@@ -131,6 +130,11 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativeTintStrength = 1.0
         self.mAbsoluteTintStrength = 1.0
 
+        # If this is True, we will show onions on the next keyticks
+        # e.g. if mRelativeOnions has 1 and 3 in it, it will draw
+        # the next and the 3rd frame with a tick on the timeslider
+        self.mRelativeKeyDisplay = True
+        self.mCallbackId = 0
 
         # Passes
         self.mClearPass = viewRenderClearRender("clearPass")
@@ -193,6 +197,7 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mTargetMgr = None
         self.mOnionObjectList = None
         self.mAnim = None
+        
 
 
     # -----------------
@@ -235,10 +240,15 @@ class viewRenderOverride(omr.MRenderOverride):
         # setting targets to relative blend passes
         for blend in self.mRelativeOnions:
             blendPass = self.mRelativeOnions[blend]
-            targetFrame = blendPass.mFrame + self.mCurrentFrame
+            targetFrame = 1
+            if self.mRelativeKeyDisplay:
+                targetFrame = blendPass.mFrame
+            else:
+                targetFrame = blendPass.mFrame + self.mCurrentFrame
 
             if targetFrame in self.mOnionBuffer:
-                blendPass.setActive(True)
+                if not self.mRelativeKeyDisplay:
+                    blendPass.setActive(True)
                 blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[targetFrame])
                 # future tint
                 if targetFrame > self.mCurrentFrame:
@@ -255,6 +265,7 @@ class viewRenderOverride(omr.MRenderOverride):
                         self.mRelativePastTint[2]/255.0 / self.lerp(1.0, self.mRelativePastTint[2]/255.0, self.mRelativeTintStrength),  
                         1.0))
             else:
+                #pass
                 blendPass.setActive(False)
 
         # setting targets to absolute blendPasses
@@ -341,6 +352,58 @@ class viewRenderOverride(omr.MRenderOverride):
         else:
             return start
 
+    # change the frame display to the right keys
+    def setRelativeFrames(self, value):
+        if not self.mRelativeKeyDisplay:
+            return
+        
+        nextKeys = []
+        pastKeys = []
+
+        nextKey = pm.findKeyframe(ts=True, w="next")
+        pastKey = pm.findKeyframe(ts=True, w="previous")
+
+        # add next keys to list
+        bufferKey = pm.getCurrentTime()
+        for i in range(4):
+            if nextKey <= bufferKey:
+                break
+            nextKeys.append(nextKey)
+            bufferKey = nextKey
+            nextKey = pm.findKeyframe(t=bufferKey, ts=True, w="next")
+
+        # add prev keys to list
+        bufferKey = pm.getCurrentTime()
+        for i in range(4):
+            if pastKey >= bufferKey:
+                break
+            pastKeys.append(pastKey)
+            bufferKey = pastKey
+            pastKey = pm.findKeyframe(t=bufferKey, ts=True, w="previous")
+
+
+        pastKeys = list(reversed(pastKeys))
+
+        for frameIndex in self.mRelativeOnions:
+            blendPass = self.mRelativeOnions[frameIndex]
+            if frameIndex < 0:
+                # past
+                if pastKeys and len(pastKeys) >= frameIndex*-1:
+                    blendPass.setActive(True)
+                    blendPass.setFrame(pastKeys[frameIndex])
+                else:
+                    blendPass.setActive(False)
+            else: 
+                # future
+                if nextKeys and len(nextKeys) >= frameIndex:
+                    blendPass.setActive(True)
+                    blendPass.setFrame(nextKeys[frameIndex-1])
+                else:
+                    blendPass.setActive(False)
+
+
+
+
 
     # ----------------
     # INTERFACE FUNCTIONS
@@ -352,6 +415,16 @@ class viewRenderOverride(omr.MRenderOverride):
     #
     def removeRelativeOnion(self, frame):
         self.removeOnion(int(frame), self.mRelativeOnions)
+
+    def setRelativeKeyDisplay(self, value):
+        self.mRelativeKeyDisplay = value
+        if value:
+            self.setRelativeFrames(1)
+        else:
+            for frameIndex in self.mRelativeOnions:
+                blendPass = self.mRelativeOnions[frameIndex]
+                blendPass.setFrame(frameIndex)
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
     
     # add a frame that is always displayed on the current position
     def addAbsoluteOnion(self, frame, opacity):
@@ -437,6 +510,17 @@ class viewRenderOverride(omr.MRenderOverride):
     def clearOnionObjects(self):
         self.mOnionObjectList = om.MSelectionList()
         self.rotOnions()
+
+    #
+    def createCallback(self):
+        # frame changed callback
+        # needed for changing the relative keyframe display
+        self.mCallbackId = om.MEventMessage.addEventCallback('timeChanged', self.setRelativeFrames)
+
+    #
+    def deleteCallback(self):
+        om.MEventMessage.removeCallback(self.mCallbackId)
+
 
     
 
@@ -598,6 +682,9 @@ class viewRenderQuadRender(omr.MQuadRender):
     def setOpacity(self, opacity):
         self.mOpacity = opacity
 
+    def setFrame(self, frame):
+        self.mFrame = frame
+
 
 
 """
@@ -664,8 +751,3 @@ class viewRenderPresentTarget(omr.MPresentTarget):
 
     def setRenderTarget(self, target):
         self.mTarget = target
-
-
-def getStuff():
-    print 'getting stuff'
-

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>333</width>
-    <height>375</height>
+    <height>377</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -85,6 +85,29 @@
         <item>
          <layout class="QVBoxLayout" name="relative_settings_layout">
           <item>
+           <widget class="QCheckBox" name="relative_keyframes_chkbx">
+            <property name="text">
+             <string>Keyframes</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="relative_top_spacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
            <widget class="QLabel" name="relative_tint_strength_label">
             <property name="text">
              <string>Tint Strength</string>
@@ -125,19 +148,6 @@ background: rgb(150, 150, 150);
              <enum>Qt::Horizontal</enum>
             </property>
            </widget>
-          </item>
-          <item>
-           <spacer name="relative_top_spacer">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
           </item>
           <item>
            <widget class="QLabel" name="relative_tint_color_label">

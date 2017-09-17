@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\chris\OneDrive\Dokumente\maya\scripts\onionSkinRenderer\onionSkinRendererWidget.ui'
+# Form implementation generated from reading ui file 'C:\Users\Christoph\OneDrive\Dokumente\maya\scripts\onionSkinRenderer\onionSkinRendererWidget.ui'
 #
-# Created: Wed Aug 09 16:24:00 2017
+# Created: Sat Sep 16 16:07:23 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_onionSkinRenderer(object):
     def setupUi(self, onionSkinRenderer):
         onionSkinRenderer.setObjectName("onionSkinRenderer")
-        onionSkinRenderer.resize(333, 375)
+        onionSkinRenderer.resize(333, 377)
         self.onionSkinRenderer_mainLayout = QtWidgets.QWidget(onionSkinRenderer)
         self.onionSkinRenderer_mainLayout.setObjectName("onionSkinRenderer_mainLayout")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.onionSkinRenderer_mainLayout)
@@ -42,6 +42,12 @@ class Ui_onionSkinRenderer(object):
         self.horizontalLayout_3.addWidget(self.relative_frame)
         self.relative_settings_layout = QtWidgets.QVBoxLayout()
         self.relative_settings_layout.setObjectName("relative_settings_layout")
+        self.relative_keyframes_chkbx = QtWidgets.QCheckBox(self.relative_tab)
+        self.relative_keyframes_chkbx.setChecked(True)
+        self.relative_keyframes_chkbx.setObjectName("relative_keyframes_chkbx")
+        self.relative_settings_layout.addWidget(self.relative_keyframes_chkbx)
+        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.relative_settings_layout.addItem(spacerItem)
         self.relative_tint_strength_label = QtWidgets.QLabel(self.relative_tab)
         self.relative_tint_strength_label.setObjectName("relative_tint_strength_label")
         self.relative_settings_layout.addWidget(self.relative_tint_strength_label)
@@ -71,8 +77,6 @@ class Ui_onionSkinRenderer(object):
         self.relative_tint_strength_slider.setOrientation(QtCore.Qt.Horizontal)
         self.relative_tint_strength_slider.setObjectName("relative_tint_strength_slider")
         self.relative_settings_layout.addWidget(self.relative_tint_strength_slider)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.relative_settings_layout.addItem(spacerItem)
         self.relative_tint_color_label = QtWidgets.QLabel(self.relative_tab)
         self.relative_tint_color_label.setObjectName("relative_tint_color_label")
         self.relative_settings_layout.addWidget(self.relative_tint_color_label)
@@ -217,6 +221,7 @@ class Ui_onionSkinRenderer(object):
 
     def retranslateUi(self, onionSkinRenderer):
         onionSkinRenderer.setWindowTitle(QtWidgets.QApplication.translate("onionSkinRenderer", "OnionSkinRenderer", None, -1))
+        self.relative_keyframes_chkbx.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Keyframes", None, -1))
         self.relative_tint_strength_label.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Tint Strength", None, -1))
         self.relative_tint_color_label.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Tint Color", None, -1))
         self.relative_futureTint_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Future", None, -1))

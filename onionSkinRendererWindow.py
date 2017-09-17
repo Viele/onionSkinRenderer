@@ -73,6 +73,7 @@ class OnionSkinRendererWindow(QtWidgets.QMainWindow, onionWidget.Ui_onionSkinRen
         self.relative_futureTint_btn.clicked.connect(self.pickColor)
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
         self.relative_tint_strength_slider.sliderMoved.connect(self.setRelativeTintStrength)
+        self.relative_keyframes_chkbx.clicked.connect(self.toggleRelativeKeyframeDisplay)
 
         self.absolute_tint_btn.clicked.connect(self.pickColor)
         self.absolute_addCrnt_btn.clicked.connect(self.addAbsoluteFrame)
@@ -188,6 +189,38 @@ class OnionSkinRendererWindow(QtWidgets.QMainWindow, onionWidget.Ui_onionSkinRen
             onionCore.viewRenderOverrideInstance.addRelativeOnion(frame, sliderValue)
         else:
             onionCore.viewRenderOverrideInstance.removeRelativeOnion(frame)
+
+    #
+    def toggleRelativeKeyframeDisplay(self):
+        sender = self.sender()
+        onionCore.viewRenderOverrideInstance.setRelativeKeyDisplay(self.sender().isChecked())
+
+        
+        futureKeys = []
+        pastKeys = []
+
+        nextKey = pm.findKeyframe(ts=True, w="next")
+        pastKey = pm.findKeyframe(ts=True, w="previous")
+
+        # add next keys to list
+        bufferKey = pm.getCurrentTime()
+        for i in range(self.mRelativeFrameAmount/2):
+            if nextKey <= bufferKey:
+                break
+            futureKeys.append(nextKey)
+            bufferKey = nextKey
+            nextKey = pm.findKeyframe(t=bufferKey, ts=True, w="next")
+
+        # add prev keys to list
+        bufferKey = pm.getCurrentTime()
+        for i in range(self.mRelativeFrameAmount/2):
+            if pastKey >= bufferKey:
+                break
+            pastKeys.append(pastKey)
+            bufferKey = pastKey
+            pastKey = pm.findKeyframe(t=bufferKey, ts=True, w="previous")
+
+
 
     # 
     def addAbsoluteFrame(self, **kwargs):
