@@ -1,0 +1,58 @@
+//**************************************************************************/
+// Copyright 2014 Autodesk, Inc.
+// All rights reserved.
+// Use of this software is subject to the terms of the Autodesk license
+// agreement provided at the time of installation or download, or which
+// otherwise accompanies this software in either electronic or hard copy form.
+//**************************************************************************/
+
+#include "Common.ogsfh"
+
+// The source texture
+uniform texture2D gSourceTex : SourceTexture;
+
+// Sampler of source texture
+uniform sampler2D gSourceSamp = sampler_state
+{
+    Texture = <gSourceTex>;
+};
+
+// The 2nd source texture
+uniform texture2D gSourceTex2 : SourceTexture2;
+
+// Sampler of 2nd source texture
+uniform sampler2D gSourceSamp2 = sampler_state
+{
+    Texture = <gSourceTex2>;
+};
+
+// Amount to blend source
+uniform float gBlendSrc = 0.3f;
+uniform vec4 gUVTransform : RelativeViewportDimensions;
+uniform vec4 gTint = {0.5, 0.5, 1.0, 1.0};
+
+
+GLSLShader PS_Blend
+{
+	void main()
+	{
+		vec4 source = texture2D(gSourceSamp, VSUV * gUVTransform.zw + gUVTransform.xy);
+		vec4 source2 = texture2D(gSourceSamp2, VSUV * gUVTransform.zw + gUVTransform.xy);
+		vec4 result = vec4( lerp(source, source2 * gTint , gBlendSrc * source2.a));		
+
+        colorOut = result;
+	}
+}
+
+
+
+// The main technique.
+technique Main
+{
+    pass p0
+    {
+        VertexShader (in VS_INPUT_ScreenQuad, out VS_TO_PS_ScreenQuad) = VS_ScreenQuad;
+        PixelShader (in VS_TO_PS_ScreenQuad, out pixelOut) = PS_Blend;
+    }
+}
+

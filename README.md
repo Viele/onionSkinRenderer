@@ -14,9 +14,8 @@ https://gum.co/IDfYg
 
 
 ## Compatibility
-As of now the plugin is only tested with Maya 2017. If you have a different version feel free to test it and please tell me if it worked or not. 
-
-BE WARNED: The UI will not work woth any other version than 2017 because I used QT5 (pyside2) for it and anything below 2017 still uses QT4 (pyside). It is not that hard to recode but it wasn't a priority for me.
+It is now tested and working with 2016 and 2017. But you have to have OpenGLCoreProfile active. To do that go to Display settings and on the second last dropdown choose
+OpenGLCoreProfile. If it's not set you will get an error. This is true for both 2016 and 2017 but on 2017 it's default.
 
 
 ## How it works
@@ -63,4 +62,3 @@ Scrub and as soon as the target onion is buffered it should be displayed.
 
 ## Future plans
 1. I will do a refactor of the whole code and properly comment it.
-2. Version testing. I want this working on older versions of Maya as well.

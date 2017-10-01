@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>onionSkinRenderer</class>
+ <widget class="QMainWindow" name="onionSkinRenderer">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>333</width>
+    <height>377</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>OnionSkinRenderer</string>
+  </property>
+  <widget class="QWidget" name="onionSkinRenderer_mainLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="onionFrames_tab">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="relative_tab">
+       <attribute name="title">
+        <string>Relative</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QFrame" name="relative_frame">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>100000</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="relative_frame_layout">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>4</number>
+           </property>
+           <property name="rightMargin">
+            <number>4</number>
+           </property>
+           <property name="bottomMargin">
+            <number>4</number>
+           </property>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="relative_settings_layout">
+          <item>
+           <widget class="QCheckBox" name="relative_keyframes_chkbx">
+            <property name="text">
+             <string>Keyframes</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="relative_top_spacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="relative_tint_strength_label">
+            <property name="text">
+             <string>Tint Strength</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="relative_tint_strength_slider">
+            <property name="styleSheet">
+             <string notr="true">QSlider{
+border: 1px solid rgb(20, 20, 20);
+margin: 4px;
+background: rgb(150, 150, 150);
+}
+QSlider::handle{
+height: 8px;
+background: rgb(50, 50, 50);
+border: 1px solid rgb(20, 20, 20);
+margin: -4px -4px;
+}
+QSlider::groove{
+background: grey;
+}
+QSlider::sub-page{
+background: rgb(75, 75, 75);
+}
+QSlider::add-page{
+background: rgb(150, 150, 150);
+}</string>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="relative_tint_color_label">
+            <property name="text">
+             <string>Tint Color</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="relative_futureTint_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color: rgb(20, 255, 114)</string>
+            </property>
+            <property name="text">
+             <string>Future</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="relative_pastTint_btn">
+            <property name="styleSheet">
+             <string notr="true">background-color:rgb(255, 26, 75)</string>
+            </property>
+            <property name="text">
+             <string>Past</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="absolute_tab">
+       <attribute name="title">
+        <string>Absolute</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <item>
+         <widget class="QFrame" name="absolute_frame">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>200</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>10000</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>4</number>
+           </property>
+           <property name="topMargin">
+            <number>4</number>
+           </property>
+           <property name="rightMargin">
+            <number>4</number>
+           </property>
+           <property name="bottomMargin">
+            <number>4</number>
+           </property>
+           <item>
+            <widget class="QListWidget" name="absolute_list">
+             <property name="selectionMode">
+              <enum>QAbstractItemView::NoSelection</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="absolute_add_layout">
+             <item>
+              <widget class="QSpinBox" name="absolute_add_spinBox">
+               <property name="minimum">
+                <number>-100000</number>
+               </property>
+               <property name="maximum">
+                <number>100000</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="absolute_add_btn">
+               <property name="text">
+                <string>Add</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="absolute_addCrnt_btn">
+               <property name="text">
+                <string>Current</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="absolute_clear_btn">
+               <property name="text">
+                <string>Clear</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="absolute_settings_layout">
+          <item>
+           <widget class="QLabel" name="absolute_tint_strength_label">
+            <property name="text">
+             <string>Tint Strength</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="absolute_tint_strength_slider">
+            <property name="styleSheet">
+             <string notr="true">QSlider{
+border: 1px solid rgb(20, 20, 20);
+margin: 4px;
+background: rgb(150, 150, 150);
+}
+QSlider::handle{
+height: 8px;
+background: rgb(50, 50, 50);
+border: 1px solid rgb(20, 20, 20);
+margin: -4px -4px;
+}
+QSlider::groove{
+background: grey;
+}
+QSlider::sub-page{
+background: rgb(75, 75, 75);
+}
+QSlider::add-page{
+background: rgb(150, 150, 150);
+}</string>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="absolute_tint_spacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QLabel" name="absolute_tint_label">
+            <property name="text">
+             <string>Tint Color</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="absolute_tint_btn">
+            <property name="styleSheet">
+             <string notr="true">background:rgb(200, 200, 50)</string>
+            </property>
+            <property name="text">
+             <string>Absolute</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="onionObjects_grp">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>3</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title">
+       <string>Onion Objects</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QListWidget" name="onionObjects_list">
+         <property name="baseSize">
+          <size>
+           <width>2</width>
+           <height>1</height>
+          </size>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="selectionMode">
+          <enum>QAbstractItemView::NoSelection</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="onionObjects_btn_layout">
+         <item>
+          <spacer name="onionObject_top_spacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item alignment="Qt::AlignTop">
+          <widget class="QPushButton" name="onionObjects_add_btn">
+           <property name="text">
+            <string>Add Selected</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="onionObjects_remove_btn">
+           <property name="text">
+            <string>Remove Selected</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="onionObjects_clear_btn">
+           <property name="text">
+            <string>Clear</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="onionObjects_bottom_spacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>333</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

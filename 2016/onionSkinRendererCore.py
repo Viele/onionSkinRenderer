@@ -27,7 +27,6 @@ TODO
 -some interaction with maya causes the onions to become invalid(not correct),
     e.g. rotating camera, adding/removing objs from onion list
     in this case the onions shouldn't be displayed unless they are updated
--show next keyframes
 """
 
 
@@ -137,16 +136,11 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mCallbackId = 0
 
         # Passes
-        self.mClearPass = viewRenderClearRender("clearPass")
-        self.mClearPass.setOverridesColors(False)
-        self.mRenderOperations.append(self.mClearPass)
-
         self.mStandardPass = viewRenderSceneRender(
             "standardPass",
-            omr.MClearOperation.kClearNone
+            omr.MClearOperation.kClearAll
         )
         self.mRenderOperations.append(self.mStandardPass)
-
         self.mOnionPass = viewRenderSceneRender(
             "onionPass",
             omr.MClearOperation.kClearAll
@@ -176,7 +170,6 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mTargetMgr = omr.MRenderer.getRenderTargetManager()
         
         self.mStandardTarget = self.mTargetMgr.acquireRenderTarget(self.mStandardTargetDescr)
-        self.mClearPass.setRenderTarget(self.mStandardTarget)
         self.mStandardPass.setRenderTarget(self.mStandardTarget)
         self.mHUDPass.setRenderTarget(self.mStandardTarget)
         self.mPresentTarget.setRenderTarget(self.mStandardTarget)
@@ -185,7 +178,6 @@ class viewRenderOverride(omr.MRenderOverride):
     def __del__(self):
         if kDebugAll or kDebugRenderOverride:
             print ("Deleting viewRenderOverride")
-        self.mClearPass = None
         self.mStandardPass = None
         self.mHUDPass = None
         self.mPresentTarget = None
@@ -203,9 +195,9 @@ class viewRenderOverride(omr.MRenderOverride):
     # -----------------
     # RENDER FUNCTIONS
 
-    # specify that openGl and Directx11 are supported
+    # specify that only openGl is supported. But it doesn't do anything
     def supportedDrawAPIs(self):
-        return omr.MRenderer.kAllDevices
+        return omr.MRenderer.kOpenGLCoreProfile
 
     # before sorting veggies on your plate, prepare your workspace
     def setup(self, destination):
@@ -537,8 +529,7 @@ class viewRenderSceneRender(omr.MSceneRender):
     def __init__(self, name, clearMask):
         if kDebugAll or kDebugSceneRender:
             print ("Initializing viewRenderSceneRender")
-        #omr.MSceneRender.__init__(self, name)
-        super(viewRenderSceneRender,self).__init__(name, 'Onion')
+        omr.MSceneRender.__init__(self, name)
         self.mClearMask = clearMask
         self.mPanelName = ""
         self.mDrawSelectionFilter = False
@@ -564,7 +555,9 @@ class viewRenderSceneRender(omr.MSceneRender):
 
     # sets the clear mask
     def clearOperation(self):
-        self.mClearOperation.setClearColor((0.0, 0.0, 0.0, 0.0))
+        # setOverridesColors(False) doesn't work in 2016
+        bg = pm.general.displayRGBColor('background', q=True)
+        self.mClearOperation.setClearColor((bg[0], bg[1], bg[2], 0.0))
         self.mClearOperation.setMask(self.mClearMask)
         return self.mClearOperation
 
@@ -599,7 +592,7 @@ class viewRenderQuadRender(omr.MQuadRender):
     kSceneBlend = 1
 
     def __init__(self, name, clearMask, frame):
-        if kDebugAll:
+        if kDebugAll or kDebugQuadRender:
             print ("Initializing viewRenderQuadRender")
         omr.MQuadRender.__init__(self, name)
 
@@ -623,7 +616,7 @@ class viewRenderQuadRender(omr.MQuadRender):
         
 
     def __del__(self):
-        if kDebugAll:
+        if kDebugAll or kDebugQuadRender:
             print ("Deleting viewRenderQuadRender")
         if self.mShaderInstance is not None:
             shaderMgr = omr.MRenderer.getShaderManager()
@@ -642,7 +635,7 @@ class viewRenderQuadRender(omr.MQuadRender):
         if self.mShaderInstance is None:
             shaderMgr = omr.MRenderer.getShaderManager()
             if self.mShader == self.kSceneBlend:
-                self.mShaderInstance = shaderMgr.getEffectsFileShader("onionSkinShader", "Main", useEffectCache = False)
+                self.mShaderInstance = shaderMgr.getEffectsFileShader("onionSkinShader", "Main", useEffectCache = True)
         if self.mShaderInstance is not None:
             if kDebugAll or kDebugQuadRender:
                 print ("Blend target 1: %s" % self.mInputTarget[0])
@@ -684,30 +677,6 @@ class viewRenderQuadRender(omr.MQuadRender):
 
     def setFrame(self, frame):
         self.mFrame = frame
-
-
-
-"""
-When M requests a new display, you first have to clear your plate.
-This happens with this tool. The plate will have a the color that M
-defines.
-"""
-class viewRenderClearRender(omr.MClearOperation):
-    def __init__(self, name):
-        omr.MClearOperation.__init__(self, name)
-
-        self.mTarget = None
-
-    def __del__(self):
-        self.mTarget = None
-
-    def targetOverrideList(self):
-        if self.mTarget is not None:
-            return [self.mTarget]
-        return None
-
-    def setRenderTarget(self, target):
-        self.mTarget = target
 
 
 """
