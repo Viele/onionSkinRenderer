@@ -3,6 +3,7 @@ import os
 from PySide2 import QtWidgets, QtCore
 import maya.OpenMayaUI as omui
 from shiboken2 import wrapInstance
+from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import onionSkinRenderer.onionSkinRendererCore as onionCore
 import onionSkinRenderer.onionSkinRendererWidget as onionWidget
 import onionSkinRenderer.onionSkinRendererFrameWidget as onionFrame
@@ -20,7 +21,7 @@ onionUI = None
 # ONION SKIN RENDERER MAIN UI
 # This class creates connections between UI and CORE
 # -----------------------------
-class OnionSkinRendererWindow(QtWidgets.QMainWindow, onionWidget.Ui_onionSkinRenderer):
+class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, onionWidget.Ui_onionSkinRenderer):
 
     # 
     def __init__(self, parent = getMayaMainWindow()):
