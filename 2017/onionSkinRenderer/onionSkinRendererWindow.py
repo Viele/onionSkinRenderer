@@ -9,6 +9,13 @@ import onionSkinRenderer.onionSkinRendererWidget as onionWidget
 import onionSkinRenderer.onionSkinRendererFrameWidget as onionFrame
 import onionSkinRenderer.onionSkinRendererObjectWidget as onionObject
 
+'''
+TODO:
+- create prefs file:
+    --let the user set the amount of relative onions with a prefs file
+    --specify colors in prefs file
+'''
+
 
 # wrapper to get mayas main window
 def getMayaMainWindow():
@@ -17,10 +24,10 @@ def getMayaMainWindow():
 
 onionUI = None
 
-# -----------------------------
-# ONION SKIN RENDERER MAIN UI
-# This class creates connections between UI and CORE
-# -----------------------------
+'''
+ONION SKIN RENDERER MAIN UI
+This class creates connections between UI and CORE
+'''
 class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, onionWidget.Ui_onionSkinRenderer):
 
     # 
@@ -171,7 +178,10 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
     #
     def removeOnionObject(self, obj):
-        onionCore.viewRenderOverrideInstance.removeOnionObject(obj.fullPath())
+        try:
+            onionCore.viewRenderOverrideInstance.removeOnionObject(obj.fullPath())
+        except:
+            onionCore.viewRenderOverrideInstance.removeOnionObject(obj.nodeName())
         self.mOnionObjectSet.remove(obj)
         self.refreshObjectList()
 
@@ -303,10 +313,11 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             onionCore.viewRenderOverrideInstance.setTint(rgba, btn.objectName())
 
 
-# -------------------------
-# FRAME WIDGET
-# the widget for displaying a frame in a list. includes visibility, opacity slider
-# and on demand a remove button   
+'''
+FRAME WIDGET
+the widget for displaying a frame in a list. includes visibility, opacity slider
+and on demand a remove button   
+'''
 class OnionListFrame(QtWidgets.QWidget, onionFrame.Ui_onionSkinFrame_layout):
     def __init__(self, parent = getMayaMainWindow()):
         super(OnionListFrame, self).__init__(parent)
@@ -325,9 +336,10 @@ class OnionListFrame(QtWidgets.QWidget, onionFrame.Ui_onionSkinFrame_layout):
         
 
 
-# ----------------------
-# OBJECT WIDGET
-# the widget for displaying an object in a list
+'''
+OBJECT WIDGET
+the widget for displaying an object in a list
+'''
 class OnionListObject(QtWidgets.QWidget, onionObject.Ui_onionSkinObject_layout):
     def __init__(self, parent = getMayaMainWindow()):
         super(OnionListObject, self).__init__(parent)

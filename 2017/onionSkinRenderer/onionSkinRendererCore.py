@@ -27,7 +27,6 @@ TODO
 -some interaction with maya causes the onions to become invalid(not correct),
     e.g. rotating camera, adding/removing objs from onion list
     in this case the onions shouldn't be displayed unless they are updated
--show next keyframes
 """
 
 
@@ -118,6 +117,7 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativeOnions = {}
         # save the absolute onions
         self.mAbsoluteOnions = {}
+        self.mOnionObjectBuffer = om.MSelectionList()
         # save all the objects to display in a list
         self.mOnionObjectList = om.MSelectionList()
         # store the render operations that combine onions in a list
@@ -302,6 +302,10 @@ class viewRenderOverride(omr.MRenderOverride):
         return self.mOperation < len(self.mRenderOperations)
 
 
+
+
+
+
     # -----------------
     # UTILITY FUNCTIONS
 
@@ -400,6 +404,29 @@ class viewRenderOverride(omr.MRenderOverride):
                     blendPass.setFrame(nextKeys[frameIndex-1])
                 else:
                     blendPass.setActive(False)
+    
+    # 
+    def addObjectsFromSelectionList(self, selList):
+        selIter = om.MItSelectionList(selList)
+        while not selIter.isDone():
+            obj = selIter.getDependNode()
+            # if its a DAG node
+            if selIter.itemType() == 0:
+                if selIter.hasComponents():
+                    self.mOnionObjectList.add(selIter.getComponent())
+                # just add it to the list if it's a dag object
+                elif obj.hasFn(om.MFn.kDagNode):
+                    self.mOnionObjectList.add(selIter.getDagPath())
+                print self.mOnionObjectList
+            # if its a set recursive call with set contents
+            elif obj.hasFn(om.MFn.kSet):
+                self.addObjectsFromSelectionList(om.MFnSet(obj).getMembers(False))
+
+            selIter.next()
+
+    # 
+    def flattenOnionObjectList(self):
+        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
 
 
 
@@ -485,18 +512,23 @@ class viewRenderOverride(omr.MRenderOverride):
             self.mAbsoluteOnions[frame].setOpacity(opacity/100.0)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
-    #
+    # adding objects to the selectionList
+    # works recursively if a set is found
     def addSelectedOnion(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
-            self.mOnionObjectList.merge(selList)
+            self.mOnionObjectBuffer.merge(selList)
+        self.mOnionObjectList.clear()
+        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
         self.rotOnions()
 
     #
     def removeSelectedOnion(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
-            self.mOnionObjectList.merge(selList, om.MSelectionList.kRemoveFromList)
+            self.mOnionObjectBuffer.merge(selList, om.MSelectionList.kRemoveFromList)
+        self.mOnionObjectList.clear()
+        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
         self.rotOnions()
 
     #
