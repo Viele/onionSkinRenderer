@@ -64,7 +64,7 @@ def initializeOverride():
         omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
         global viewRenderOverrideInstance
         viewRenderOverrideInstance = viewRenderOverride("onionSkinRenderer")
-        viewRenderOverrideInstance.createCallback()
+        viewRenderOverrideInstance.createCallbacks()
         omr.MRenderer.registerOverride(viewRenderOverrideInstance)
     except:
         raise Exception("Failed to register plugin %s" %kPluginName)
@@ -76,7 +76,7 @@ def uninitializeOverride():
         global viewRenderOverrideInstance
         if viewRenderOverrideInstance is not None:
             omr.MRenderer.deregisterOverride(viewRenderOverrideInstance)
-            viewRenderOverrideInstance.deleteCallback()
+            viewRenderOverrideInstance.deleteCallbacks()
             viewRenderOverrideInstance = None
     except:
         raise Exception("Failed to unregister plugin %s" % kPluginName)
@@ -134,7 +134,8 @@ class viewRenderOverride(omr.MRenderOverride):
         # e.g. if mRelativeOnions has 1 and 3 in it, it will draw
         # the next and the 3rd frame with a tick on the timeslider
         self.mRelativeKeyDisplay = True
-        self.mCallbackId = 0
+        self.mTimeCallbackId = 0
+        self.mCameraMovedCallbackIds = []
 
         # Passes
         self.mClearPass = viewRenderClearRender("clearPass")
@@ -342,12 +343,12 @@ class viewRenderOverride(omr.MRenderOverride):
         return self.mUIName
     
     #
-    def rotOnions(self):
+    def rotOnions(self, refresh = True):
         if self.mTargetMgr is not None:
             for target in self.mOnionBuffer:
                 self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer.get(target))
         self.mOnionBuffer.clear()
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+        if refresh: omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     #
     def lerp(self, start, end, factor):
@@ -356,7 +357,7 @@ class viewRenderOverride(omr.MRenderOverride):
         else:
             return start
 
-    # change the frame display to the right keys
+    # change the frame display to the right keys relative to timeslider position
     def setRelativeFrames(self, value):
         if not self.mRelativeKeyDisplay:
             return
@@ -424,9 +425,16 @@ class viewRenderOverride(omr.MRenderOverride):
 
             selIter.next()
 
-    # 
-    def flattenOnionObjectList(self):
-        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
+    # attached to all cameras found on plugin launch, removes onions when the camera moves
+    # but only on user input. animated cameras are not affected
+    def cameraMovedCB(self, msg, plug1, plug2, payload):
+        if msg == 2056 and self.isPlugInteresting(plug1, 'translate') or self.isPlugInteresting(plug1, 'rotate'):
+            self.rotOnions(False)
+
+    # checks if the plug matches the given string
+    def isPlugInteresting(self, plug, targetPlug):
+        mfn_dep = om.MFnDependencyNode(plug.node())
+        return plug == mfn_dep.findPlug(targetPlug, True)
 
 
 
@@ -543,15 +551,27 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOnionObjectList = om.MSelectionList()
         self.rotOnions()
 
-    #
-    def createCallback(self):
+    # adding callbacks to the scene
+    def createCallbacks(self):
         # frame changed callback
         # needed for changing the relative keyframe display
-        self.mCallbackId = om.MEventMessage.addEventCallback('timeChanged', self.setRelativeFrames)
+        self.mTimeCallbackId = om.MEventMessage.addEventCallback('timeChanged', self.setRelativeFrames)
+        # iterate over all cameras add the callback
+        dgIter = om.MItDependencyNodes(om.MFn.kCamera)
+        while not dgIter.isDone():
+            shape = om.MFnDagNode(dgIter.thisNode())
+            transform = shape.parent(0)
+            if transform is not None:
+                self.mCameraMovedCallbackIds.append(
+                    om.MNodeMessage.addAttributeChangedCallback(transform, self.cameraMovedCB))
+            dgIter.next()
 
-    #
-    def deleteCallback(self):
-        om.MEventMessage.removeCallback(self.mCallbackId)
+    # removing them when the ui is closed
+    def deleteCallbacks(self):
+        om.MEventMessage.removeCallback(self.mTimeCallbackId)
+        for id in self.mCameraMovedCallbackIds:
+            om.MMessage.removeCallback(id)
+        self.mCameraMovedCallbackIds = []
 
 
     
