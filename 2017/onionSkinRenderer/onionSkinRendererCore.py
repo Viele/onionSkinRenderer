@@ -38,7 +38,7 @@ start here to see whats wrong
 kDebugAll = False
 kDebugRenderOverride = False
 kDebugSceneRender = False
-kDebugQuadRender = False
+kDebugQuadRender = True
 kPluginName = "Onion Skin Renderer"
 
 
@@ -703,7 +703,7 @@ class viewRenderQuadRender(omr.MQuadRender):
         if self.mShaderInstance is None:
             shaderMgr = omr.MRenderer.getShaderManager()
             if self.mShader == self.kSceneBlend:
-                self.mShaderInstance = shaderMgr.getEffectsFileShader("onionSkinShader", "Main", useEffectCache = True)
+                self.mShaderInstance = shaderMgr.getEffectsFileShader("onionSkinShader.fx", "Main", useEffectCache = not kDebugQuadRender)
         if self.mShaderInstance is not None:
             if kDebugAll or kDebugQuadRender:
                 print ("Blend target 1: %s" % self.mInputTarget[0])
@@ -712,6 +712,9 @@ class viewRenderQuadRender(omr.MQuadRender):
             self.mShaderInstance.setParameter("gSourceTex2", self.mInputTarget[1])
             self.mShaderInstance.setParameter("gBlendSrc", self.mOpacity)
             self.mShaderInstance.setParameter("gTint", self.mTint)
+
+        if kDebugAll or kDebugQuadRender:
+            print self.mShaderInstance
 
         return self.mShaderInstance
 
