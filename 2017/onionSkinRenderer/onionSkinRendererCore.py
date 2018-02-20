@@ -6,6 +6,7 @@ import pymel.core as pm
 import os
 import inspect
 import traceback
+import collections
 
 """
 This code is a render override for displaying onion skin overlays in the 3D viewport,
@@ -38,7 +39,7 @@ start here to see whats wrong
 kDebugAll = False
 kDebugRenderOverride = False
 kDebugSceneRender = False
-kDebugQuadRender = True
+kDebugQuadRender = False
 kPluginName = "Onion Skin Renderer"
 
 
@@ -112,6 +113,10 @@ class viewRenderOverride(omr.MRenderOverride):
         # holds all avaialable onions
         # the key to the target is its frame number
         self.mOnionBuffer = {}
+        # save the order in which onions where added
+        self.mOnionBufferQueue = collections.deque()
+        # max buffer size
+        self.mMaxOnionBufferSize = 100
         # sometimes M doesn't want to see onions,
         # thats when this should be False
         self.mEnableBlend = False
@@ -234,6 +239,8 @@ class viewRenderOverride(omr.MRenderOverride):
         # if the onion is not buffered do so, otherwise update the buffered
         if self.mCurrentFrame not in self.mOnionBuffer:
             self.mOnionBuffer[self.mCurrentFrame] = self.mTargetMgr.acquireRenderTarget(self.mOnionTargetDescr)
+            self.mOnionBufferQueue.append(self.mCurrentFrame)
+            if len(self.mOnionBufferQueue) > self.mMaxOnionBufferSize: self.rotOldestOnion()
         else:
             self.mOnionBuffer.get(self.mCurrentFrame).updateDescription(self.mOnionTargetDescr)
         # then set the render target to the appropriate onion
@@ -353,6 +360,13 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOnionBuffer.clear()
         if refresh: omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
+    # 
+    def rotOldestOnion(self):
+        frame = self.mOnionBufferQueue.popleft()
+        if self.mTargetMgr is not None:
+            self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer[frame])
+        self.mOnionBuffer.pop(frame)
+
     #
     def lerp(self, start, end, factor):
         if factor < 1 and factor > 0:
@@ -440,6 +454,8 @@ class viewRenderOverride(omr.MRenderOverride):
     def isPlugInteresting(self, plug, targetPlug):
         mfn_dep = om.MFnDependencyNode(plug.node())
         return plug == mfn_dep.findPlug(targetPlug, True)
+
+        
 
 
 
@@ -658,6 +674,12 @@ the same time
 class viewRenderQuadRender(omr.MQuadRender):
     kEffectNone = 0
     kSceneBlend = 1
+    
+    kFileExtension = {
+        omr.MRenderer.kOpenGL:'.cgfx',
+        omr.MRenderer.kOpenGLCoreProfile: '.ogsfx',
+        omr.MRenderer.kDirectX11: '.fx'
+        }
 
     def __init__(self, name, clearMask, frame):
         if kDebugAll:
@@ -703,7 +725,11 @@ class viewRenderQuadRender(omr.MQuadRender):
         if self.mShaderInstance is None:
             shaderMgr = omr.MRenderer.getShaderManager()
             if self.mShader == self.kSceneBlend:
-                self.mShaderInstance = shaderMgr.getEffectsFileShader("onionSkinShader.fx", "Main", useEffectCache = not kDebugQuadRender)
+                self.mShaderInstance = shaderMgr.getEffectsFileShader(
+                    "onionSkinShader%s"%self.kFileExtension[omr.MRenderer.drawAPI()], 
+                    "Main", 
+                    useEffectCache = not kDebugQuadRender
+                    )
         if self.mShaderInstance is not None:
             if kDebugAll or kDebugQuadRender:
                 print ("Blend target 1: %s" % self.mInputTarget[0])
