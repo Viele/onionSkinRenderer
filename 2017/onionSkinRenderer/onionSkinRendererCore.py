@@ -35,7 +35,7 @@ Constants
 When M is so unhappy with your work that it refuses it,
 start here to see whats wrong
 """
-kDebugAll = False
+kDebugAll = True
 kDebugRenderOverride = False
 kDebugSceneRender = False
 kDebugQuadRender = False
@@ -136,6 +136,7 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativeKeyDisplay = True
         self.mTimeCallbackId = 0
         self.mCameraMovedCallbackIds = []
+        self.mAutoClearBuffer = True
 
         # Passes
         self.mClearPass = viewRenderClearRender("clearPass")
@@ -418,7 +419,6 @@ class viewRenderOverride(omr.MRenderOverride):
                 # just add it to the list if it's a dag object
                 elif obj.hasFn(om.MFn.kDagNode):
                     self.mOnionObjectList.add(selIter.getDagPath())
-                print self.mOnionObjectList
             # if its a set recursive call with set contents
             elif obj.hasFn(om.MFn.kSet):
                 self.addObjectsFromSelectionList(om.MFnSet(obj).getMembers(False))
@@ -428,7 +428,10 @@ class viewRenderOverride(omr.MRenderOverride):
     # attached to all cameras found on plugin launch, removes onions when the camera moves
     # but only on user input. animated cameras are not affected
     def cameraMovedCB(self, msg, plug1, plug2, payload):
-        if msg == 2056 and self.isPlugInteresting(plug1, 'translate') or self.isPlugInteresting(plug1, 'rotate'):
+        if (msg == 2056 
+            and self.mAutoClearBuffer
+            and (self.isPlugInteresting(plug1, 'translate') 
+            or self.isPlugInteresting(plug1, 'rotate'))):
             self.rotOnions(False)
 
     # checks if the plug matches the given string
@@ -572,6 +575,10 @@ class viewRenderOverride(omr.MRenderOverride):
         for id in self.mCameraMovedCallbackIds:
             om.MMessage.removeCallback(id)
         self.mCameraMovedCallbackIds = []
+
+    # define if the buffer should be cleared when the camera moves
+    def setAutoClearBuffer(self, value):
+        self.mAutoClearBuffer = value
 
 
     

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\Christoph\OneDrive\Dokumente\maya\scripts\onionSkinRenderer\onionSkinRendererWidget.ui'
+# Form implementation generated from reading ui file 'C:\Users\chris\Desktop\onionSkinRenderer\2017\onionSkinRenderer\onionSkinRendererWidget.ui'
 #
-# Created: Sat Sep 16 16:07:23 2017
+# Created: Thu Feb 15 22:11:24 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -207,13 +207,25 @@ class Ui_onionSkinRenderer(object):
         self.horizontalLayout.addLayout(self.onionObjects_btn_layout)
         self.verticalLayout_3.addWidget(self.onionObjects_grp)
         onionSkinRenderer.setCentralWidget(self.onionSkinRenderer_mainLayout)
-        self.menubar = QtWidgets.QMenuBar(onionSkinRenderer)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 333, 21))
-        self.menubar.setObjectName("menubar")
-        onionSkinRenderer.setMenuBar(self.menubar)
+        self.onionSkinRenderer_menubar = QtWidgets.QMenuBar(onionSkinRenderer)
+        self.onionSkinRenderer_menubar.setGeometry(QtCore.QRect(0, 0, 333, 21))
+        self.onionSkinRenderer_menubar.setObjectName("onionSkinRenderer_menubar")
+        self.menubar_settings = QtWidgets.QMenu(self.onionSkinRenderer_menubar)
+        self.menubar_settings.setObjectName("menubar_settings")
+        onionSkinRenderer.setMenuBar(self.onionSkinRenderer_menubar)
         self.statusbar = QtWidgets.QStatusBar(onionSkinRenderer)
         self.statusbar.setObjectName("statusbar")
         onionSkinRenderer.setStatusBar(self.statusbar)
+        self.settings_clearBuffer = QtWidgets.QAction(onionSkinRenderer)
+        self.settings_clearBuffer.setCheckable(False)
+        self.settings_clearBuffer.setObjectName("settings_clearBuffer")
+        self.settings_autoClearBuffer = QtWidgets.QAction(onionSkinRenderer)
+        self.settings_autoClearBuffer.setCheckable(True)
+        self.settings_autoClearBuffer.setChecked(True)
+        self.settings_autoClearBuffer.setObjectName("settings_autoClearBuffer")
+        self.menubar_settings.addAction(self.settings_clearBuffer)
+        self.menubar_settings.addAction(self.settings_autoClearBuffer)
+        self.onionSkinRenderer_menubar.addAction(self.menubar_settings.menuAction())
 
         self.retranslateUi(onionSkinRenderer)
         self.onionFrames_tab.setCurrentIndex(0)
@@ -238,4 +250,7 @@ class Ui_onionSkinRenderer(object):
         self.onionObjects_add_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Add Selected", None, -1))
         self.onionObjects_remove_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Remove Selected", None, -1))
         self.onionObjects_clear_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Clear", None, -1))
+        self.menubar_settings.setTitle(QtWidgets.QApplication.translate("onionSkinRenderer", "Settings", None, -1))
+        self.settings_clearBuffer.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Clear Buffer", None, -1))
+        self.settings_autoClearBuffer.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Auto Clear Buffer", None, -1))
 

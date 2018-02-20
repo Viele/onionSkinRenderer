@@ -1,9 +1,12 @@
 import pymel.core as pm
 import os
+import json
+import inspect
 from PySide2 import QtWidgets, QtCore
 import maya.OpenMayaUI as omui
 from shiboken2 import wrapInstance
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
+
 import onionSkinRenderer.onionSkinRendererCore as onionCore
 import onionSkinRenderer.onionSkinRendererWidget as onionWidget
 import onionSkinRenderer.onionSkinRendererFrameWidget as onionFrame
@@ -13,7 +16,6 @@ import onionSkinRenderer.onionSkinRendererObjectWidget as onionObject
 TODO:
 - create prefs file:
     --let the user set the amount of relative onions with a prefs file
-    --specify colors in prefs file
 '''
 
 
@@ -22,7 +24,26 @@ def getMayaMainWindow():
     mayaPtr = omui.MQtUtil.mainWindow()
     return wrapInstance(long(mayaPtr), QtWidgets.QWidget)
 
+
 onionUI = None
+def openOnionSkinRenderer(develop = False, dockable = False):
+
+    if develop:
+        reload(onionFrame)
+        reload(onionWidget)	
+        reload(onionCore)
+        reload(onionObject)
+
+    #if __name__ == "__main__":
+    try:
+        onionUI.close()
+    except:
+        pass
+    
+    onionUI = OnionSkinRendererWindow()
+    onionUI.show(dockable = dockable)
+    
+
 
 '''
 ONION SKIN RENDERER MAIN UI
@@ -44,32 +65,25 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         # member variables
         self.mOnionObjectSet = set()
         self.mAbsoluteOnionSet = set()
-        # TODO let the user set the amount of relative onions with a prefs file
         self.mRelativeFrameAmount = 8
+        self.mToolPath = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
 
         # create the ui from the compiled qt designer file
         self.setupUi(self)
 
-        # create the clear buffer button
-        self.onionFrames_clearBuffer_btn = QtWidgets.QPushButton('Clear Buffer')
-        self.onionFrames_tab.setCornerWidget(self.onionFrames_clearBuffer_btn)
-        self.onionFrames_clearBuffer_btn.clicked.connect(self.clearBuffer)
-
-        # set the colors of the color picker buttons
-        # TODO: specify colors in prefs file
-        self.setOnionColor(self.relative_futureTint_btn, [45,255,120])
-        self.setOnionColor(self.relative_pastTint_btn, [255,45,75])
-        self.setOnionColor(self.absolute_tint_btn, [200,200,50])
-
         self.refreshRelativeFrame()
         
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+        # load settings from the ui
+        self.loadSettings()
 
         self.createConnections()
 
     #
     def closeEvent(self, event):
         # when the UI is closed, deactivate the override
+        self.saveSettings()
         onionCore.uninitializeOverride()
 
     #
@@ -88,6 +102,9 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.absolute_add_btn.clicked.connect(self.addAbsoluteFrameFromSpinbox)
         self.absolute_tint_strength_slider.sliderMoved.connect(self.setAbsoluteTintStrength)
         self.absolute_clear_btn.clicked.connect(self.clearAbsoluteFrames)
+
+        self.settings_clearBuffer.triggered.connect(self.clearBuffer)
+        self.settings_autoClearBuffer.triggered.connect(self.setAutoClearBuffer)
 
 
     # ------------------
@@ -205,33 +222,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     def toggleRelativeKeyframeDisplay(self):
         sender = self.sender()
         onionCore.viewRenderOverrideInstance.setRelativeKeyDisplay(self.sender().isChecked())
-
-        
-        futureKeys = []
-        pastKeys = []
-
-        nextKey = pm.findKeyframe(ts=True, w="next")
-        pastKey = pm.findKeyframe(ts=True, w="previous")
-
-        # add next keys to list
-        bufferKey = pm.getCurrentTime()
-        for i in range(self.mRelativeFrameAmount/2):
-            if nextKey <= bufferKey:
-                break
-            futureKeys.append(nextKey)
-            bufferKey = nextKey
-            nextKey = pm.findKeyframe(t=bufferKey, ts=True, w="next")
-
-        # add prev keys to list
-        bufferKey = pm.getCurrentTime()
-        for i in range(self.mRelativeFrameAmount/2):
-            if pastKey >= bufferKey:
-                break
-            pastKeys.append(pastKey)
-            bufferKey = pastKey
-            pastKey = pm.findKeyframe(t=bufferKey, ts=True, w="previous")
-
-
+        self.saveSettings()
 
     # 
     def addAbsoluteFrame(self, **kwargs):
@@ -277,6 +268,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         color = QtWidgets.QColorDialog.getColor()
         if color.isValid():
             self.setOnionColor(self.sender(), color.getRgb())
+        self.saveSettings()
 
     #
     def setRelativeOpacity(self):
@@ -300,6 +292,11 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             self.sender().value()
         )
 
+    # 
+    def setAutoClearBuffer(self):
+        value = self.sender().isChecked()
+        onionCore.viewRenderOverrideInstance.setAutoClearBuffer(value)
+
 
             
             
@@ -311,6 +308,38 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     def setOnionColor(self, btn, rgba):
             btn.setStyleSheet('background-color: rgb(%s,%s,%s);'%(rgba[0], rgba[1], rgba[2]))
             onionCore.viewRenderOverrideInstance.setTint(rgba, btn.objectName())
+
+    #
+    def loadSettings(self):
+        with open(os.path.join(self.mToolPath,'settings.txt')) as json_file:  
+            data = json.load(json_file)
+            self.settings_autoClearBuffer.setChecked(data['autoClearBuffer'])
+            onionCore.viewRenderOverrideInstance.setAutoClearBuffer(data['autoClearBuffer'])
+
+            self.relative_keyframes_chkbx.setChecked(data['displayKeyframes'])
+            onionCore.viewRenderOverrideInstance.setRelativeKeyDisplay(data['displayKeyframes'])
+
+            self.setOnionColor(self.relative_futureTint_btn, data['rFutureTint'])
+            self.setOnionColor(self.relative_pastTint_btn, data['rPastTint'])
+            self.setOnionColor(self.absolute_tint_btn, data['aTint'])
+    
+    # save values into a json file
+    def saveSettings(self):
+        data = {}
+        data['autoClearBuffer'] = self.settings_autoClearBuffer.isChecked()
+        data['displayKeyframes'] = self.relative_keyframes_chkbx.isChecked()
+        data['rFutureTint'] = self.extractRGBFromStylesheet(self.relative_futureTint_btn.styleSheet())
+        data['rPastTint'] = self.extractRGBFromStylesheet(self.relative_pastTint_btn.styleSheet())
+        data['aTint'] = self.extractRGBFromStylesheet(self.absolute_tint_btn.styleSheet())
+
+        with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
+            json.dump(data, outfile)
+
+    def extractRGBFromStylesheet(self, s):
+        return map(int,(s[s.find("(")+1:s.find(")")]).split(','))
+
+
+
 
 
 '''

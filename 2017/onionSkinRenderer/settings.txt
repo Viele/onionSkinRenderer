@@ -1,0 +1,1 @@
+{"autoClearBuffer": true, "aTint": [200, 200, 50], "rPastTint": [255, 26, 75], "displayKeyframes": false, "rFutureTint": [20, 255, 114]}
