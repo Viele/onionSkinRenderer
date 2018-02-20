@@ -35,7 +35,7 @@ Constants
 When M is so unhappy with your work that it refuses it,
 start here to see whats wrong
 """
-kDebugAll = True
+kDebugAll = False
 kDebugRenderOverride = False
 kDebugSceneRender = False
 kDebugQuadRender = False
@@ -59,6 +59,7 @@ viewRenderOverrideInstance = None
 
 # init
 def initializeOverride():
+    if kDebugAll: print 'initialize Renderer'
     try:
         # register the path to the plugin
         omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
@@ -72,6 +73,7 @@ def initializeOverride():
 
 # un-init
 def uninitializeOverride():
+    if kDebugAll: print 'unitiliazide Renderer'
     try:
         global viewRenderOverrideInstance
         if viewRenderOverrideInstance is not None:
@@ -207,7 +209,7 @@ class viewRenderOverride(omr.MRenderOverride):
 
     # specify that openGl and Directx11 are supported
     def supportedDrawAPIs(self):
-        return omr.MRenderer.kOpenGLCoreProfile
+        return omr.MRenderer.kAllDevices
 
     # before sorting veggies on your plate, prepare your workspace
     def setup(self, destination):

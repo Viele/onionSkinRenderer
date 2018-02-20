@@ -54,6 +54,9 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     # 
     def __init__(self, parent = getMayaMainWindow()):
         super(OnionSkinRendererWindow, self).__init__(parent)
+        # the dockable feature creates this control that needs to be deleted manually
+        # otherwise it throws an error that this name already exists
+        self.deleteControl('onionSkinRendererWorkspaceControl')
         
         # This registers the override in maya
         # I previously had it as plugin, but this made it impossible to get
@@ -85,6 +88,17 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         # when the UI is closed, deactivate the override
         self.saveSettings()
         onionCore.uninitializeOverride()
+    
+    # special event for the dockable feature
+    def dockCloseEventTriggered(self):
+        self.saveSettings()
+        onionCore.uninitializeOverride()
+
+    # code from https://gist.github.com/liorbenhorin/217bfb7e54c6f75b9b1b2b3d73a1a43a
+    def deleteControl(self, control):
+        if pm.workspaceControl(control, q=True, exists=True):
+            pm.workspaceControl(control, e=True, close=True)
+            pm.deleteUI(control, control=True)
 
     #
     def createConnections(self):
@@ -334,7 +348,8 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
         with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
             json.dump(data, outfile)
-
+        
+    # 
     def extractRGBFromStylesheet(self, s):
         return map(int,(s[s.find("(")+1:s.find(")")]).split(','))
 
