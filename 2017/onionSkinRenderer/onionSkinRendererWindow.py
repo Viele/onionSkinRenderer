@@ -11,6 +11,7 @@ import onionSkinRenderer.onionSkinRendererCore as onionCore
 import onionSkinRenderer.onionSkinRendererWidget as onionWidget
 import onionSkinRenderer.onionSkinRendererFrameWidget as onionFrame
 import onionSkinRenderer.onionSkinRendererObjectWidget as onionObject
+import onionSkinRenderer.onionSkinRendererPreferences as onionPrefs
 
 '''
 TODO:
@@ -33,6 +34,7 @@ def openOnionSkinRenderer(develop = False, dockable = False):
         reload(onionWidget)	
         reload(onionCore)
         reload(onionObject)
+        reload(onionPrefs)
 
     #if __name__ == "__main__":
     try:
@@ -110,6 +112,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
         self.relative_tint_strength_slider.sliderMoved.connect(self.setRelativeTintStrength)
         self.relative_keyframes_chkbx.clicked.connect(self.toggleRelativeKeyframeDisplay)
+        self.relative_step_spinBox.valueChanged.connect(self.setRelativeStep)
 
         self.absolute_tint_btn.clicked.connect(self.pickColor)
         self.absolute_addCrnt_btn.clicked.connect(self.addAbsoluteFrame)
@@ -119,6 +122,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
         self.settings_clearBuffer.triggered.connect(self.clearBuffer)
         self.settings_autoClearBuffer.triggered.connect(self.setAutoClearBuffer)
+        self.settings_preferences.triggered.connect(self.changePrefs)
 
 
     # ------------------
@@ -138,19 +142,29 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
     # 
     def refreshRelativeFrame(self):
+        activeFrames = []
         # clear the frame of all widgets first
-        for child in self.relative_frame.findChildren(QtWidgets.QWidget):
+        for child in self.relative_frame.findChildren(OnionListFrame):
+            if child.frame_visibility_btn.isChecked():
+                activeFrames.append(int(child.frame_number.text()))
             child.setParent(None)
-        # fill the relative frames list
         
+        # fill the relative frames list
         for index in range(self.mRelativeFrameAmount + 1):
             if not index-self.mRelativeFrameAmount/2 == 0:
                 listWidget = OnionListFrame()
-                listWidget.frame_number.setText(str(index-self.mRelativeFrameAmount/2))
+                frame = index-self.mRelativeFrameAmount/2
+                listWidget.frame_number.setText(str(frame))
                 listWidget.frame_opacity_slider.setValue(75/abs(index-self.mRelativeFrameAmount/2))
                 listWidget.frame_visibility_btn.clicked.connect(self.toggleRelativeFrame)
+                if frame in activeFrames: 
+                    listWidget.frame_visibility_btn.setChecked(True)
+                    activeFrames.remove(frame)
                 listWidget.frame_opacity_slider.sliderMoved.connect(self.setRelativeOpacity)
                 self.relative_frame_layout.addWidget(listWidget)
+        
+        for frame in activeFrames:
+            onionCore.viewRenderOverrideInstance.removeRelativeOnion(frame)
 
     # 
     def refreshAbsoluteList(self):
@@ -311,6 +325,17 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         value = self.sender().isChecked()
         onionCore.viewRenderOverrideInstance.setAutoClearBuffer(value)
 
+    #
+    def changePrefs(self):
+        prefUi = OnionPreferences(self)
+        if prefUi.exec_():
+            values = prefUi.getValues()
+            onionCore.viewRenderOverrideInstance.setMaxBuffer(values['maxBuffer'])
+            self.mRelativeFrameAmount = values['relativeKeyCount']*2
+            self.refreshRelativeFrame()
+        
+    def setRelativeStep(self):
+        onionCore.viewRenderOverrideInstance.setRelativeStep(self.sender().value())
 
             
             
@@ -336,6 +361,8 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             self.setOnionColor(self.relative_futureTint_btn, data['rFutureTint'])
             self.setOnionColor(self.relative_pastTint_btn, data['rPastTint'])
             self.setOnionColor(self.absolute_tint_btn, data['aTint'])
+
+            self.mRelativeFrameAmount = data['relativeFrameAmount']
     
     # save values into a json file
     def saveSettings(self):
@@ -345,6 +372,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         data['rFutureTint'] = self.extractRGBFromStylesheet(self.relative_futureTint_btn.styleSheet())
         data['rPastTint'] = self.extractRGBFromStylesheet(self.relative_pastTint_btn.styleSheet())
         data['aTint'] = self.extractRGBFromStylesheet(self.absolute_tint_btn.styleSheet())
+        data['relativeFrameAmount'] = self.mRelativeFrameAmount
 
         with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
             json.dump(data, outfile)
@@ -388,3 +416,22 @@ class OnionListObject(QtWidgets.QWidget, onionObject.Ui_onionSkinObject_layout):
     def __init__(self, parent = getMayaMainWindow()):
         super(OnionListObject, self).__init__(parent)
         self.setupUi(self)
+
+
+
+'''
+Settings Dialog
+in this window the user can set some preferences
+'''
+class OnionPreferences(QtWidgets.QDialog, onionPrefs.Ui_onionSkinRendererPreferences):
+    def __init__(self, parent):
+        super(OnionPreferences, self).__init__(parent)
+        self.setupUi(self)
+        self.relativeKeyCount_spinBox.setValue(parent.mRelativeFrameAmount/2)
+        self.maxBuffer_spinBox.setValue(onionCore.viewRenderOverrideInstance.getMaxBuffer())
+
+    def getValues(self):
+        values = {}
+        values['maxBuffer'] = self.maxBuffer_spinBox.value()
+        values['relativeKeyCount'] = self.relativeKeyCount_spinBox.value()
+        return values

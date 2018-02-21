@@ -116,12 +116,14 @@ class viewRenderOverride(omr.MRenderOverride):
         # save the order in which onions where added
         self.mOnionBufferQueue = collections.deque()
         # max buffer size
-        self.mMaxOnionBufferSize = 100
+        self.mMaxOnionBufferSize = 200
         # sometimes M doesn't want to see onions,
         # thats when this should be False
         self.mEnableBlend = False
         # save the relative Onions
         self.mRelativeOnions = {}
+        # only display every nth relative onion
+        self.mRelativeStep = 1
         # save the absolute onions
         self.mAbsoluteOnions = {}
         self.mOnionObjectBuffer = om.MSelectionList()
@@ -255,7 +257,8 @@ class viewRenderOverride(omr.MRenderOverride):
             if self.mRelativeKeyDisplay:
                 targetFrame = blendPass.mFrame
             else:
-                targetFrame = blendPass.mFrame + self.mCurrentFrame
+                targetFrame = blendPass.mFrame * self.mRelativeStep + self.mCurrentFrame
+            
 
             if targetFrame in self.mOnionBuffer:
                 if not self.mRelativeKeyDisplay:
@@ -362,7 +365,7 @@ class viewRenderOverride(omr.MRenderOverride):
 
     # 
     def rotOldestOnion(self):
-        frame = self.mOnionBufferQueue.popleft()
+        frame = int(self.mOnionBufferQueue.popleft())
         if self.mTargetMgr is not None:
             self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer[frame])
         self.mOnionBuffer.pop(frame)
@@ -597,6 +600,19 @@ class viewRenderOverride(omr.MRenderOverride):
     # define if the buffer should be cleared when the camera moves
     def setAutoClearBuffer(self, value):
         self.mAutoClearBuffer = value
+
+    # 
+    def setMaxBuffer(self, value):
+        self.mMaxOnionBufferSize = value
+
+    def getMaxBuffer(self):
+        return self.mMaxOnionBufferSize
+
+    def setRelativeStep(self, value):
+        self.mRelativeStep = value
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    
 
 
     
