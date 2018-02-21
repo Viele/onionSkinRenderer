@@ -361,11 +361,12 @@ class viewRenderOverride(omr.MRenderOverride):
             for target in self.mOnionBuffer:
                 self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer.get(target))
         self.mOnionBuffer.clear()
+        self.mOnionBufferQueue.clear()
         if refresh: omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     # 
     def rotOldestOnion(self):
-        frame = int(self.mOnionBufferQueue.popleft())
+        frame = self.mOnionBufferQueue.popleft()
         if self.mTargetMgr is not None:
             self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer[frame])
         self.mOnionBuffer.pop(frame)
@@ -604,6 +605,10 @@ class viewRenderOverride(omr.MRenderOverride):
     # 
     def setMaxBuffer(self, value):
         self.mMaxOnionBufferSize = value
+        while len(self.mOnionBufferQueue) > self.mMaxOnionBufferSize:
+            self.rotOldestOnion()
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+        
 
     def getMaxBuffer(self):
         return self.mMaxOnionBufferSize

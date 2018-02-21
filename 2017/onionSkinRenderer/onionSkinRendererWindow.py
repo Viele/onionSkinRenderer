@@ -70,20 +70,19 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         # member variables
         self.mOnionObjectSet = set()
         self.mAbsoluteOnionSet = set()
+        self.mPrefs = {}
         self.mRelativeFrameAmount = 8
         self.mToolPath = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
 
         # create the ui from the compiled qt designer file
         self.setupUi(self)
 
-        self.refreshRelativeFrame()
-        
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-        # load settings from the ui
-        self.loadSettings()
-
         self.createConnections()
+
+        # load settings from the settings file
+        self.loadSettings()
 
     #
     def closeEvent(self, event):
@@ -93,7 +92,10 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     
     # special event for the dockable feature
     def dockCloseEventTriggered(self):
-        self.saveSettings()
+        try:
+            self.saveSettings()
+        except:
+            pass
         onionCore.uninitializeOverride()
 
     # code from https://gist.github.com/liorbenhorin/217bfb7e54c6f75b9b1b2b3d73a1a43a
@@ -333,9 +335,12 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             onionCore.viewRenderOverrideInstance.setMaxBuffer(values['maxBuffer'])
             self.mRelativeFrameAmount = values['relativeKeyCount']*2
             self.refreshRelativeFrame()
-        
+            self.saveSettings()
+            
+    #     
     def setRelativeStep(self):
         onionCore.viewRenderOverrideInstance.setRelativeStep(self.sender().value())
+        self.saveSettings()        
 
             
             
@@ -351,18 +356,23 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     #
     def loadSettings(self):
         with open(os.path.join(self.mToolPath,'settings.txt')) as json_file:  
-            data = json.load(json_file)
-            self.settings_autoClearBuffer.setChecked(data['autoClearBuffer'])
-            onionCore.viewRenderOverrideInstance.setAutoClearBuffer(data['autoClearBuffer'])
+            self.mPrefs = json.load(json_file)
+            self.settings_autoClearBuffer.setChecked(self.mPrefs.setdefault('autoClearBuffer',True))
+            onionCore.viewRenderOverrideInstance.setAutoClearBuffer(self.mPrefs.setdefault('autoClearBuffer',True))
 
-            self.relative_keyframes_chkbx.setChecked(data['displayKeyframes'])
-            onionCore.viewRenderOverrideInstance.setRelativeKeyDisplay(data['displayKeyframes'])
+            self.relative_keyframes_chkbx.setChecked(self.mPrefs.setdefault('displayKeyframes',True))
+            onionCore.viewRenderOverrideInstance.setRelativeKeyDisplay(self.mPrefs.setdefault('displayKeyframes',True))
 
-            self.setOnionColor(self.relative_futureTint_btn, data['rFutureTint'])
-            self.setOnionColor(self.relative_pastTint_btn, data['rPastTint'])
-            self.setOnionColor(self.absolute_tint_btn, data['aTint'])
+            self.setOnionColor(self.relative_futureTint_btn, self.mPrefs.setdefault('rFutureTint',[0,0,125]))
+            self.setOnionColor(self.relative_pastTint_btn, self.mPrefs.setdefault('rPastTint',[0,125,0]))
+            self.setOnionColor(self.absolute_tint_btn, self.mPrefs.setdefault('aTint', [125,0,0]))
 
-            self.mRelativeFrameAmount = data['relativeFrameAmount']
+            self.mRelativeFrameAmount = self.mPrefs.setdefault('relativeFrameAmount',4)
+            self.refreshRelativeFrame()
+
+            self.relative_step_spinBox.setValue(self.mPrefs.setdefault('relativeStep', 1))
+
+            onionCore.viewRenderOverrideInstance.setMaxBuffer(self.mPrefs.setdefault('maxBufferSize', 200))
     
     # save values into a json file
     def saveSettings(self):
@@ -373,6 +383,8 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         data['rPastTint'] = self.extractRGBFromStylesheet(self.relative_pastTint_btn.styleSheet())
         data['aTint'] = self.extractRGBFromStylesheet(self.absolute_tint_btn.styleSheet())
         data['relativeFrameAmount'] = self.mRelativeFrameAmount
+        data['relativeStep'] = self.relative_step_spinBox.value()
+        data['maxBufferSize'] = onionCore.viewRenderOverrideInstance.getMaxBuffer()
 
         with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
             json.dump(data, outfile)
