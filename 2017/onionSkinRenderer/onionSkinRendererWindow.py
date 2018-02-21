@@ -13,11 +13,6 @@ import onionSkinRenderer.onionSkinRendererFrameWidget as onionFrame
 import onionSkinRenderer.onionSkinRendererObjectWidget as onionObject
 import onionSkinRenderer.onionSkinRendererPreferences as onionPrefs
 
-'''
-TODO:
-- create prefs file:
-    --let the user set the amount of relative onions with a prefs file
-'''
 
 
 # wrapper to get mayas main window

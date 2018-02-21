@@ -23,13 +23,6 @@ You have to manage a sequence of these onions,
 and if requested display a certain number of them
 """
 
-"""
-TODO
--some interaction with maya causes the onions to become invalid(not correct),
-    e.g. rotating camera, adding/removing objs from onion list
-    in this case the onions shouldn't be displayed unless they are updated
-"""
-
 
 """
 Constants
@@ -69,6 +62,7 @@ def initializeOverride():
         viewRenderOverrideInstance.createCallbacks()
         omr.MRenderer.registerOverride(viewRenderOverrideInstance)
     except:
+        traceback.print_exc()
         raise Exception("Failed to register plugin %s" %kPluginName)
         
 
@@ -82,6 +76,7 @@ def uninitializeOverride():
             viewRenderOverrideInstance.deleteCallbacks()
             viewRenderOverrideInstance = None
     except:
+        traceback.print_exc()
         raise Exception("Failed to unregister plugin %s" % kPluginName)
         
 
@@ -126,6 +121,7 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativeStep = 1
         # save the absolute onions
         self.mAbsoluteOnions = {}
+        # buffer onion objects to make adding sets possible
         self.mOnionObjectBuffer = om.MSelectionList()
         # save all the objects to display in a list
         self.mOnionObjectList = om.MSelectionList()
@@ -609,10 +605,11 @@ class viewRenderOverride(omr.MRenderOverride):
             self.rotOldestOnion()
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
         
-
+    # 
     def getMaxBuffer(self):
         return self.mMaxOnionBufferSize
 
+    # 
     def setRelativeStep(self, value):
         self.mRelativeStep = value
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
@@ -635,7 +632,6 @@ class viewRenderSceneRender(omr.MSceneRender):
     def __init__(self, name, clearMask):
         if kDebugAll or kDebugSceneRender:
             print ("Initializing viewRenderSceneRender")
-        #omr.MSceneRender.__init__(self, name)
         super(viewRenderSceneRender,self).__init__(name, 'Onion')
         self.mClearMask = clearMask
         self.mPanelName = ""

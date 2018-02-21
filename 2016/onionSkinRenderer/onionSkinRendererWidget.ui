@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>333</width>
-    <height>377</height>
+    <width>341</width>
+    <height>407</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -93,6 +93,24 @@
              <bool>true</bool>
             </property>
            </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="relative_step_layout">
+            <item>
+             <widget class="QLabel" name="relative_step_label">
+              <property name="text">
+               <string>Relative Step</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="relative_step_spinBox">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <spacer name="relative_top_spacer">
@@ -436,17 +454,50 @@ background: rgb(150, 150, 150);
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
+  <widget class="QMenuBar" name="onionSkinRenderer_menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>333</width>
+     <width>341</width>
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menubar_settings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="settings_clearBuffer"/>
+    <addaction name="settings_autoClearBuffer"/>
+    <addaction name="settings_preferences"/>
+   </widget>
+   <addaction name="menubar_settings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="settings_clearBuffer">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Clear Buffer</string>
+   </property>
+  </action>
+  <action name="settings_autoClearBuffer">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Auto Clear Buffer</string>
+   </property>
+  </action>
+  <action name="settings_preferences">
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

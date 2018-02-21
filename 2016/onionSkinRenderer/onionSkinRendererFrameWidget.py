@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\Christoph\OneDrive\Dokumente\maya\scripts\onionSkinRenderer\onionSkinRendererFrameWidget.ui'
+# Form implementation generated from reading ui file 'D:\Personal Work\2017\OnionSkinRenderer\onionSkinRenderer\2016\onionSkinRenderer\onionSkinRendererFrameWidget.ui'
 #
-# Created: Sun Sep 17 17:57:34 2017
+# Created: Wed Feb 21 16:52:45 2018
 #      by: pyside-uic 0.2.14 running on PySide 1.2.0
 #
 # WARNING! All changes made in this file will be lost!

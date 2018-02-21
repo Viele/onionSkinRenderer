@@ -1,4 +1,6 @@
 import maya.api.OpenMaya as om
+# necessary because new api doesn't have iterators
+import maya.OpenMaya as oldOm
 import maya.api.OpenMayaRender as omr
 import maya.api.OpenMayaAnim as oma
 import maya.api.OpenMayaUI as omui
@@ -6,6 +8,7 @@ import pymel.core as pm
 import os
 import inspect
 import traceback
+import collections
 
 """
 This code is a render override for displaying onion skin overlays in the 3D viewport,
@@ -22,12 +25,6 @@ You have to manage a sequence of these onions,
 and if requested display a certain number of them
 """
 
-"""
-TODO
--some interaction with maya causes the onions to become invalid(not correct),
-    e.g. rotating camera, adding/removing objs from onion list
-    in this case the onions shouldn't be displayed unless they are updated
-"""
 
 
 """
@@ -59,26 +56,30 @@ viewRenderOverrideInstance = None
 
 # init
 def initializeOverride():
+    if kDebugAll: print 'initialize Renderer'
     try:
         # register the path to the plugin
         omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
         global viewRenderOverrideInstance
         viewRenderOverrideInstance = viewRenderOverride("onionSkinRenderer")
-        viewRenderOverrideInstance.createCallback()
+        viewRenderOverrideInstance.createCallbacks()
         omr.MRenderer.registerOverride(viewRenderOverrideInstance)
-    except:
+    except Exception as e:
+        traceback.print_exc()
         raise Exception("Failed to register plugin %s" %kPluginName)
         
 
 # un-init
 def uninitializeOverride():
+    if kDebugAll: print 'unitiliazide Renderer'
     try:
         global viewRenderOverrideInstance
         if viewRenderOverrideInstance is not None:
             omr.MRenderer.deregisterOverride(viewRenderOverrideInstance)
-            viewRenderOverrideInstance.deleteCallback()
+            viewRenderOverrideInstance.deleteCallbacks()
             viewRenderOverrideInstance = None
-    except:
+    except Exception as e:
+        traceback.print_exc()
         raise Exception("Failed to unregister plugin %s" % kPluginName)
         
 
@@ -110,13 +111,21 @@ class viewRenderOverride(omr.MRenderOverride):
         # holds all avaialable onions
         # the key to the target is its frame number
         self.mOnionBuffer = {}
+        # save the order in which onions where added
+        self.mOnionBufferQueue = collections.deque()
+        # max buffer size
+        self.mMaxOnionBufferSize = 200
         # sometimes M doesn't want to see onions,
         # thats when this should be False
         self.mEnableBlend = False
         # save the relative Onions
         self.mRelativeOnions = {}
+        # only display every nth relative onion
+        self.mRelativeStep = 1
         # save the absolute onions
         self.mAbsoluteOnions = {}
+        # buffer onion objects to make adding sets possible
+        self.mOnionObjectBuffer = om.MSelectionList()
         # save all the objects to display in a list
         self.mOnionObjectList = om.MSelectionList()
         # store the render operations that combine onions in a list
@@ -134,6 +143,8 @@ class viewRenderOverride(omr.MRenderOverride):
         # the next and the 3rd frame with a tick on the timeslider
         self.mRelativeKeyDisplay = True
         self.mCallbackId = 0
+        self.mCameraMovedCallbackIds = []
+        self.mAutoClearBuffer = True
 
         # Passes
         self.mStandardPass = viewRenderSceneRender(
@@ -197,7 +208,7 @@ class viewRenderOverride(omr.MRenderOverride):
 
     # specify that only openGl is supported. But it doesn't do anything
     def supportedDrawAPIs(self):
-        return omr.MRenderer.kOpenGLCoreProfile
+        return omr.MRenderer.kAllDevices
 
     # before sorting veggies on your plate, prepare your workspace
     def setup(self, destination):
@@ -222,6 +233,8 @@ class viewRenderOverride(omr.MRenderOverride):
         # if the onion is not buffered do so, otherwise update the buffered
         if self.mCurrentFrame not in self.mOnionBuffer:
             self.mOnionBuffer[self.mCurrentFrame] = self.mTargetMgr.acquireRenderTarget(self.mOnionTargetDescr)
+            self.mOnionBufferQueue.append(self.mCurrentFrame)
+            if len(self.mOnionBufferQueue) > self.mMaxOnionBufferSize: self.rotOldestOnion()
         else:
             self.mOnionBuffer.get(self.mCurrentFrame).updateDescription(self.mOnionTargetDescr)
         # then set the render target to the appropriate onion
@@ -236,7 +249,7 @@ class viewRenderOverride(omr.MRenderOverride):
             if self.mRelativeKeyDisplay:
                 targetFrame = blendPass.mFrame
             else:
-                targetFrame = blendPass.mFrame + self.mCurrentFrame
+                targetFrame = blendPass.mFrame * self.mRelativeStep + self.mCurrentFrame
 
             if targetFrame in self.mOnionBuffer:
                 if not self.mRelativeKeyDisplay:
@@ -330,12 +343,21 @@ class viewRenderOverride(omr.MRenderOverride):
         return self.mUIName
     
     #
-    def rotOnions(self):
+    def rotOnions(self, refresh = True):
         if self.mTargetMgr is not None:
             for target in self.mOnionBuffer:
                 self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer.get(target))
         self.mOnionBuffer.clear()
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+        self.mOnionBufferQueue.clear()
+        if refresh: omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    # 
+    def rotOldestOnion(self):
+        frame = self.mOnionBufferQueue.popleft()
+        if self.mTargetMgr is not None:
+            self.mTargetMgr.releaseRenderTarget(self.mOnionBuffer[frame])
+        self.mOnionBuffer.pop(frame)
+
 
     #
     def lerp(self, start, end, factor):
@@ -392,6 +414,38 @@ class viewRenderOverride(omr.MRenderOverride):
                     blendPass.setFrame(nextKeys[frameIndex-1])
                 else:
                     blendPass.setActive(False)
+
+    # 
+    def addObjectsFromSelectionList(self, selList):
+        selIter = om.MItSelectionList(selList)
+        while not selIter.isDone():
+            obj = selIter.getDependNode()
+            # if its a DAG node
+            if selIter.itemType() == 0:
+                if selIter.hasComponents():
+                    self.mOnionObjectList.add(selIter.getComponent())
+                # just add it to the list if it's a dag object
+                elif obj.hasFn(om.MFn.kDagNode):
+                    self.mOnionObjectList.add(selIter.getDagPath())
+            # if its a set recursive call with set contents
+            elif obj.hasFn(om.MFn.kSet):
+                self.addObjectsFromSelectionList(om.MFnSet(obj).getMembers(False))
+
+            selIter.next()
+
+    # attached to all cameras found on plugin launch, removes onions when the camera moves
+    # but only on user input. animated cameras are not affected
+    def cameraMovedCB(self, msg, plug1, plug2, payload):
+        if (msg == 2056 
+            and self.mAutoClearBuffer
+            and (self.isPlugInteresting(plug1, 'translate') 
+            or self.isPlugInteresting(plug1, 'rotate'))):
+            self.rotOnions(False)
+
+    # checks if the plug matches the given string
+    def isPlugInteresting(self, plug, targetPlug):
+        mfn_dep = oldOm.MFnDependencyNode(plug.node())
+        return plug == mfn_dep.findPlug(targetPlug, True)
 
 
 
@@ -481,14 +535,18 @@ class viewRenderOverride(omr.MRenderOverride):
     def addSelectedOnion(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
-            self.mOnionObjectList.merge(selList)
+            self.mOnionObjectBuffer.merge(selList)
+        self.mOnionObjectList.clear()
+        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
         self.rotOnions()
 
     #
     def removeSelectedOnion(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
-            self.mOnionObjectList.merge(selList, om.MSelectionList.kRemoveFromList)
+            self.mOnionObjectBuffer.merge(selList, om.MSelectionList.kRemoveFromList)
+        self.mOnionObjectList.clear()
+        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
         self.rotOnions()
 
     #
@@ -503,16 +561,51 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOnionObjectList = om.MSelectionList()
         self.rotOnions()
 
-    #
-    def createCallback(self):
+    # adding callbacks to the scene
+    def createCallbacks(self):
         # frame changed callback
         # needed for changing the relative keyframe display
-        self.mCallbackId = om.MEventMessage.addEventCallback('timeChanged', self.setRelativeFrames)
+        self.mTimeCallbackId = om.MEventMessage.addEventCallback('timeChanged', self.setRelativeFrames)
+        # iterate over all cameras add the callback
+        # using old api because new doesn't include iterator over dep nodes
+        dgit = oldOm.MItDependencyNodes(oldOm.MFn.kCamera)
 
-    #
-    def deleteCallback(self):
-        om.MEventMessage.removeCallback(self.mCallbackId)
+        while not dgit.isDone():
+            t = oldOm.MFnDagNode(dgit.thisNode()).parent(0)
+            if t is not None:
+                self.mCameraMovedCallbackIds.append(
+                    oldOm.MNodeMessage.addAttributeChangedCallback(t, self.cameraMovedCB))
+            dgit.next()
 
+
+    # removing them when the ui is closed
+    def deleteCallbacks(self):
+        om.MEventMessage.removeCallback(self.mTimeCallbackId)
+        for id in self.mCameraMovedCallbackIds:
+            oldOm.MMessage.removeCallback(id)
+        self.mCameraMovedCallbackIds = []
+
+    # define if the buffer should be cleared when the camera moves
+    def setAutoClearBuffer(self, value):
+        self.mAutoClearBuffer = value
+
+    # 
+    def setMaxBuffer(self, value):
+        self.mMaxOnionBufferSize = value
+        while len(self.mOnionBufferQueue) > self.mMaxOnionBufferSize:
+            self.rotOldestOnion()
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+        
+    # 
+    def getMaxBuffer(self):
+        return self.mMaxOnionBufferSize
+
+    # 
+    def setRelativeStep(self, value):
+        self.mRelativeStep = value
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    
 
     
 
@@ -591,6 +684,12 @@ class viewRenderQuadRender(omr.MQuadRender):
     kEffectNone = 0
     kSceneBlend = 1
 
+    kFileExtension = {
+        omr.MRenderer.kOpenGL:'.cgfx',
+        omr.MRenderer.kOpenGLCoreProfile: '.ogsfx',
+        omr.MRenderer.kDirectX11: '.fx'
+        }
+
     def __init__(self, name, clearMask, frame):
         if kDebugAll or kDebugQuadRender:
             print ("Initializing viewRenderQuadRender")
@@ -635,7 +734,11 @@ class viewRenderQuadRender(omr.MQuadRender):
         if self.mShaderInstance is None:
             shaderMgr = omr.MRenderer.getShaderManager()
             if self.mShader == self.kSceneBlend:
-                self.mShaderInstance = shaderMgr.getEffectsFileShader("onionSkinShader", "Main", useEffectCache = True)
+                self.mShaderInstance = shaderMgr.getEffectsFileShader(
+                    "onionSkinShader%s"%self.kFileExtension[omr.MRenderer.drawAPI()],
+                    "Main", 
+                    useEffectCache = not kDebugQuadRender
+                    )
         if self.mShaderInstance is not None:
             if kDebugAll or kDebugQuadRender:
                 print ("Blend target 1: %s" % self.mInputTarget[0])

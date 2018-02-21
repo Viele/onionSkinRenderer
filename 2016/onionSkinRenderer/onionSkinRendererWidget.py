@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\Christoph\OneDrive\Dokumente\maya\scripts\onionSkinRenderer\onionSkinRendererWidget.ui'
+# Form implementation generated from reading ui file 'D:\Personal Work\2017\OnionSkinRenderer\onionSkinRenderer\2016\onionSkinRenderer\onionSkinRendererWidget.ui'
 #
-# Created: Sun Sep 17 17:58:18 2017
+# Created: Wed Feb 21 16:53:01 2018
 #      by: pyside-uic 0.2.14 running on PySide 1.2.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_onionSkinRenderer(object):
     def setupUi(self, onionSkinRenderer):
         onionSkinRenderer.setObjectName("onionSkinRenderer")
-        onionSkinRenderer.resize(333, 377)
+        onionSkinRenderer.resize(341, 407)
         self.onionSkinRenderer_mainLayout = QtGui.QWidget(onionSkinRenderer)
         self.onionSkinRenderer_mainLayout.setObjectName("onionSkinRenderer_mainLayout")
         self.verticalLayout_3 = QtGui.QVBoxLayout(self.onionSkinRenderer_mainLayout)
@@ -46,6 +46,16 @@ class Ui_onionSkinRenderer(object):
         self.relative_keyframes_chkbx.setChecked(True)
         self.relative_keyframes_chkbx.setObjectName("relative_keyframes_chkbx")
         self.relative_settings_layout.addWidget(self.relative_keyframes_chkbx)
+        self.relative_step_layout = QtGui.QHBoxLayout()
+        self.relative_step_layout.setObjectName("relative_step_layout")
+        self.relative_step_label = QtGui.QLabel(self.relative_tab)
+        self.relative_step_label.setObjectName("relative_step_label")
+        self.relative_step_layout.addWidget(self.relative_step_label)
+        self.relative_step_spinBox = QtGui.QSpinBox(self.relative_tab)
+        self.relative_step_spinBox.setMinimum(1)
+        self.relative_step_spinBox.setObjectName("relative_step_spinBox")
+        self.relative_step_layout.addWidget(self.relative_step_spinBox)
+        self.relative_settings_layout.addLayout(self.relative_step_layout)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.relative_settings_layout.addItem(spacerItem)
         self.relative_tint_strength_label = QtGui.QLabel(self.relative_tab)
@@ -207,13 +217,28 @@ class Ui_onionSkinRenderer(object):
         self.horizontalLayout.addLayout(self.onionObjects_btn_layout)
         self.verticalLayout_3.addWidget(self.onionObjects_grp)
         onionSkinRenderer.setCentralWidget(self.onionSkinRenderer_mainLayout)
-        self.menubar = QtGui.QMenuBar(onionSkinRenderer)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 333, 21))
-        self.menubar.setObjectName("menubar")
-        onionSkinRenderer.setMenuBar(self.menubar)
+        self.onionSkinRenderer_menubar = QtGui.QMenuBar(onionSkinRenderer)
+        self.onionSkinRenderer_menubar.setGeometry(QtCore.QRect(0, 0, 341, 21))
+        self.onionSkinRenderer_menubar.setObjectName("onionSkinRenderer_menubar")
+        self.menubar_settings = QtGui.QMenu(self.onionSkinRenderer_menubar)
+        self.menubar_settings.setObjectName("menubar_settings")
+        onionSkinRenderer.setMenuBar(self.onionSkinRenderer_menubar)
         self.statusbar = QtGui.QStatusBar(onionSkinRenderer)
         self.statusbar.setObjectName("statusbar")
         onionSkinRenderer.setStatusBar(self.statusbar)
+        self.settings_clearBuffer = QtGui.QAction(onionSkinRenderer)
+        self.settings_clearBuffer.setCheckable(False)
+        self.settings_clearBuffer.setObjectName("settings_clearBuffer")
+        self.settings_autoClearBuffer = QtGui.QAction(onionSkinRenderer)
+        self.settings_autoClearBuffer.setCheckable(True)
+        self.settings_autoClearBuffer.setChecked(True)
+        self.settings_autoClearBuffer.setObjectName("settings_autoClearBuffer")
+        self.settings_preferences = QtGui.QAction(onionSkinRenderer)
+        self.settings_preferences.setObjectName("settings_preferences")
+        self.menubar_settings.addAction(self.settings_clearBuffer)
+        self.menubar_settings.addAction(self.settings_autoClearBuffer)
+        self.menubar_settings.addAction(self.settings_preferences)
+        self.onionSkinRenderer_menubar.addAction(self.menubar_settings.menuAction())
 
         self.retranslateUi(onionSkinRenderer)
         self.onionFrames_tab.setCurrentIndex(0)
@@ -222,6 +247,7 @@ class Ui_onionSkinRenderer(object):
     def retranslateUi(self, onionSkinRenderer):
         onionSkinRenderer.setWindowTitle(QtGui.QApplication.translate("onionSkinRenderer", "OnionSkinRenderer", None, QtGui.QApplication.UnicodeUTF8))
         self.relative_keyframes_chkbx.setText(QtGui.QApplication.translate("onionSkinRenderer", "Keyframes", None, QtGui.QApplication.UnicodeUTF8))
+        self.relative_step_label.setText(QtGui.QApplication.translate("onionSkinRenderer", "Relative Step", None, QtGui.QApplication.UnicodeUTF8))
         self.relative_tint_strength_label.setText(QtGui.QApplication.translate("onionSkinRenderer", "Tint Strength", None, QtGui.QApplication.UnicodeUTF8))
         self.relative_tint_color_label.setText(QtGui.QApplication.translate("onionSkinRenderer", "Tint Color", None, QtGui.QApplication.UnicodeUTF8))
         self.relative_futureTint_btn.setText(QtGui.QApplication.translate("onionSkinRenderer", "Future", None, QtGui.QApplication.UnicodeUTF8))
@@ -238,4 +264,8 @@ class Ui_onionSkinRenderer(object):
         self.onionObjects_add_btn.setText(QtGui.QApplication.translate("onionSkinRenderer", "Add Selected", None, QtGui.QApplication.UnicodeUTF8))
         self.onionObjects_remove_btn.setText(QtGui.QApplication.translate("onionSkinRenderer", "Remove Selected", None, QtGui.QApplication.UnicodeUTF8))
         self.onionObjects_clear_btn.setText(QtGui.QApplication.translate("onionSkinRenderer", "Clear", None, QtGui.QApplication.UnicodeUTF8))
+        self.menubar_settings.setTitle(QtGui.QApplication.translate("onionSkinRenderer", "Settings", None, QtGui.QApplication.UnicodeUTF8))
+        self.settings_clearBuffer.setText(QtGui.QApplication.translate("onionSkinRenderer", "Clear Buffer", None, QtGui.QApplication.UnicodeUTF8))
+        self.settings_autoClearBuffer.setText(QtGui.QApplication.translate("onionSkinRenderer", "Auto Clear Buffer", None, QtGui.QApplication.UnicodeUTF8))
+        self.settings_preferences.setText(QtGui.QApplication.translate("onionSkinRenderer", "Preferences", None, QtGui.QApplication.UnicodeUTF8))
 
