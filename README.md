@@ -32,26 +32,25 @@ This plugin is an extension to the standard viewport2.0 renderer. When Maya Rend
 
 
 ## How to install
-Just copy the folder to your scripts folder
+Just copy the correct version to your scripts folder
 C:\Users\[username]\Documents\maya\scripts
+
+so it should be like 
+C:\Users\[username]\Documents\maya\scripts\onionSkinRenderer\[all the files]
 
 
 ## How to use
 Open the UI with
 ```
 import onionSkinRenderer.onionSkinRendererWindow as onionWindow
-import onionSkinRenderer.onionSkinRendererCore as onionCore
-if __name__ == "__main__":
-    try:
-        onionUI.close()
-    except:
-        pass
+onionWindow.openOnionSkinRenderer()
+```
 
+or if you are on 2017 and up you have the option to make it dockable
 
-	reload(onionCore)
-
-    onionUI = onionWindow.OnionSkinRendererWindow()
-    onionUI.show()
+```
+import onionSkinRenderer.onionSkinRendererWindow as onionWindow
+onionWindow.openOnionSkinRenderer(dockable=True)
 ```
 
 With the UI open a new renderer appears (Onion Skin Renderer) in the dropdown where you can choose between Viewport 2.0 and Legacy Viewport. Select it.
