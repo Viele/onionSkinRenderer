@@ -424,22 +424,24 @@ class viewRenderOverride(omr.MRenderOverride):
                     blendPass.setActive(False)
     
     # 
-    def addObjectsFromSelectionList(self, selList):
+    def flattenSelectionList(self, selList):
+        flatList = om.MSelectionList()
         selIter = om.MItSelectionList(selList)
         while not selIter.isDone():
             obj = selIter.getDependNode()
             # if its a DAG node
             if selIter.itemType() == 0:
                 if selIter.hasComponents():
-                    self.mOnionObjectList.add(selIter.getComponent())
+                    flatList.add(selIter.getComponent())
                 # just add it to the list if it's a dag object
                 elif obj.hasFn(om.MFn.kDagNode):
-                    self.mOnionObjectList.add(selIter.getDagPath())
+                    flatList.add(selIter.getDagPath())
             # if its a set recursive call with set contents
             elif obj.hasFn(om.MFn.kSet):
-                self.addObjectsFromSelectionList(om.MFnSet(obj).getMembers(False))
+                flatList.merge(self.flattenSelectionList(om.MFnSet(obj).getMembers(False)))
 
             selIter.next()
+        return flatList
 
     # attached to all cameras found on plugin launch, removes onions when the camera moves
     # but only on user input. animated cameras are not affected
@@ -547,8 +549,7 @@ class viewRenderOverride(omr.MRenderOverride):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
             self.mOnionObjectBuffer.merge(selList)
-        self.mOnionObjectList.clear()
-        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
+        self.mOnionObjectList = self.flattenSelectionList(self.mOnionObjectBuffer)
         self.rotOnions()
 
     #
@@ -556,20 +557,21 @@ class viewRenderOverride(omr.MRenderOverride):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
             self.mOnionObjectBuffer.merge(selList, om.MSelectionList.kRemoveFromList)
-        self.mOnionObjectList.clear()
-        self.addObjectsFromSelectionList(self.mOnionObjectBuffer)
+        self.mOnionObjectList = self.flattenSelectionList(self.mOnionObjectBuffer)
         self.rotOnions()
 
     #
     def removeOnionObject(self, dagPath):
         tmpList = om.MSelectionList()
         tmpList.add(dagPath)
-        self.mOnionObjectList.merge(tmpList, om.MSelectionList.kRemoveFromList)
+        self.mOnionObjectBuffer.merge(tmpList, om.MSelectionList.kRemoveFromList)
+        self.mOnionObjectList = self.flattenSelectionList(self.mOnionObjectBuffer)
         self.rotOnions()
 
     #
     def clearOnionObjects(self):
         self.mOnionObjectList = om.MSelectionList()
+        self.mOnionObjectBuffer = om.MSelectionList()
         self.rotOnions()
 
     # adding callbacks to the scene
