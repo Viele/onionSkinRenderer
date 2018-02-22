@@ -68,9 +68,15 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.mPrefs = {}
         self.mRelativeFrameAmount = 8
         self.mToolPath = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+        self.mActiveEditor = None
 
         # create the ui from the compiled qt designer file
         self.setupUi(self)
+
+        # create the toggle renderer button
+        self.toggleRenderer_btn = QtWidgets.QPushButton('Toggle Renderer')
+        self.onionFrames_tab.setCornerWidget(self.toggleRenderer_btn)
+        self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
 
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
@@ -335,7 +341,51 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     #     
     def setRelativeStep(self):
         onionCore.viewRenderOverrideInstance.setRelativeStep(self.sender().value())
-        self.saveSettings()        
+        self.saveSettings()     
+
+    # togle active or saved editor between onion Skin Renderer and vp2
+    def toggleRenderer(self):
+        modelPanelList = []
+        modelEditorList = pm.lsUI(editors=True)
+        # find all model panels
+        for myModelPanel in modelEditorList:
+            if myModelPanel.find('modelPanel') != -1:
+                modelPanelList.append(myModelPanel)
+
+        onionPanel = None
+        # if any of those is already set to onion skin renderer
+        for modelPanel in modelPanelList:
+            if pm.uitypes.ModelEditor(modelPanel).getRendererOverrideName() == 'onionSkinRenderer':
+                onionPanel = pm.uitypes.ModelEditor(modelPanel)
+                break
+
+        # if there is a panel with the onion skin renderer
+        # deactivate it and save the panel
+        if onionPanel:
+            try:
+                # Always better to try in the case of active panel operations
+                # as the active panel might not be a viewport.
+                onionPanel.setRendererOverrideName('')
+                self.mActiveEditor = onionPanel
+            except Exception as e:
+                # Handle exception
+                print e
+        else:
+            # if there is a saved editor panel activate the renderer on it
+            if self.mActiveEditor:
+                self.mActiveEditor.setRendererOverrideName('onionSkinRenderer')
+            # else toggle the active one
+            else:
+                for modelPanel in modelPanelList:
+                    if pm.uitypes.ModelEditor(modelPanel).getActiveView():
+                        try:
+                            if pm.uitypes.ModelEditor(modelPanel).getRendererOverrideName() == '':
+                                pm.uitypes.ModelEditor(modelPanel).setRendererOverrideName('onionSkinRenderer')
+                            else:
+                                pm.uitypes.ModelEditor(modelPanel).setRendererOverrideName('')
+                        except Exception as e:
+                            # Handle exception
+                            print e   
 
             
             
