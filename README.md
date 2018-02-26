@@ -14,9 +14,7 @@ https://gum.co/IDfYg
 
 
 ## Compatibility
-It is now tested and working with 2016 and 2017. But you have to have OpenGLCoreProfile active. To do that go to Display settings and on the second last dropdown choose
-OpenGLCoreProfile. If it's not set you will get an error. This is true for both 2016 and 2017 but on 2017 it's default.
-
+It is now tested and working with 2016 and 2017. It should work with 2018 but this is not tested now.
 
 ## How it works
 This plugin is an extension to the standard viewport2.0 renderer. When Maya Renders a frame, a pass with the specified objects is created and stored. If you now tell the plugin to display information from another frame, it checks if that exists and if yes, draws it above the geometry.
