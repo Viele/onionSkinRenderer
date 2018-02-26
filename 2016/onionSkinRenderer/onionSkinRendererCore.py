@@ -137,6 +137,7 @@ class viewRenderOverride(omr.MRenderOverride):
         # tint strengths, 1 is full tint
         self.mRelativeTintStrength = 1.0
         self.mAbsoluteTintStrength = 1.0
+        self.mGlobalOpacity = 1.0
 
         # If this is True, we will show onions on the next keyticks
         # e.g. if mRelativeOnions has 1 and 3 in it, it will draw
@@ -527,6 +528,10 @@ class viewRenderOverride(omr.MRenderOverride):
             self.mRelativeOnions[int(frame)].setOpacity(opacity/100.0)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
+    def setGlobalOpacity(self, opacity):
+        self.mGlobalOpacity = opacity/100.0
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
     #
     def setAbsoluteOpacity(self, frame, opacity):
         if frame in self.mAbsoluteOnions:
@@ -748,7 +753,7 @@ class viewRenderQuadRender(omr.MQuadRender):
                 print ("Blend target 2: %s" % self.mInputTarget[1])
             self.mShaderInstance.setParameter("gSourceTex", self.mInputTarget[0])
             self.mShaderInstance.setParameter("gSourceTex2", self.mInputTarget[1])
-            self.mShaderInstance.setParameter("gBlendSrc", self.mOpacity)
+            self.mShaderInstance.setParameter("gBlendSrc", self.mOpacity*viewRenderOverrideInstance.mGlobalOpacity)
             self.mShaderInstance.setParameter("gTint", self.mTint)
 
         return self.mShaderInstance

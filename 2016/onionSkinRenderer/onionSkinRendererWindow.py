@@ -67,11 +67,6 @@ class OnionSkinRendererWindow(QtGui.QMainWindow, onionWidget.Ui_onionSkinRendere
         # create the ui from the compiled qt designer file
         self.setupUi(self)
 
-        # create the toggle renderer button
-        self.toggleRenderer_btn = QtGui.QPushButton('Toggle Renderer')
-        self.onionFrames_tab.setCornerWidget(self.toggleRenderer_btn)
-        self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
-
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.createConnections()
@@ -90,6 +85,9 @@ class OnionSkinRendererWindow(QtGui.QMainWindow, onionWidget.Ui_onionSkinRendere
         self.onionObjects_add_btn.clicked.connect(self.addSelectedObjects)
         self.onionObjects_remove_btn.clicked.connect(self.removeSelectedObjects)
         self.onionObjects_clear_btn.clicked.connect(self.clearOnionObjects)
+
+        self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
+        self.globalOpacity_slider.sliderMoved.connect(self.setGlobalOpacity)
 
         self.relative_futureTint_btn.clicked.connect(self.pickColor)
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
@@ -388,7 +386,11 @@ class OnionSkinRendererWindow(QtGui.QMainWindow, onionWidget.Ui_onionSkinRendere
                                 pm.uitypes.ModelEditor(modelPanel).setRendererOverrideName('')
                         except Exception as e:
                             # Handle exception
-                            print e   
+                            print e
+
+    def setGlobalOpacity(self):
+        onionCore.viewRenderOverrideInstance.setGlobalOpacity(self.sender().value())
+
             
             
 

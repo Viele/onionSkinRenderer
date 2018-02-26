@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:\Personal Work\2017\OnionSkinRenderer\onionSkinRenderer\2017\onionSkinRenderer\onionSkinRendererWidget.ui'
 #
-# Created: Wed Feb 21 12:53:22 2018
+# Created: Mon Feb 26 20:59:46 2018
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,13 +12,21 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_onionSkinRenderer(object):
     def setupUi(self, onionSkinRenderer):
         onionSkinRenderer.setObjectName("onionSkinRenderer")
-        onionSkinRenderer.resize(341, 407)
+        onionSkinRenderer.resize(355, 474)
         self.onionSkinRenderer_mainLayout = QtWidgets.QWidget(onionSkinRenderer)
         self.onionSkinRenderer_mainLayout.setObjectName("onionSkinRenderer_mainLayout")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.onionSkinRenderer_mainLayout)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_3.setContentsMargins(2, 0, 2, 0)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.onionFrames_tab = QtWidgets.QTabWidget(self.onionSkinRenderer_mainLayout)
+        self.onionSkins_grp = QtWidgets.QGroupBox(self.onionSkinRenderer_mainLayout)
+        self.onionSkins_grp.setTitle("")
+        self.onionSkins_grp.setObjectName("onionSkins_grp")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.onionSkins_grp)
+        self.verticalLayout.setContentsMargins(4, 4, 4, 4)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.onionFrames_tab = QtWidgets.QTabWidget(self.onionSkins_grp)
+        self.onionFrames_tab.setStyleSheet("")
+        self.onionFrames_tab.setTabShape(QtWidgets.QTabWidget.Rounded)
         self.onionFrames_tab.setObjectName("onionFrames_tab")
         self.relative_tab = QtWidgets.QWidget()
         self.relative_tab.setObjectName("relative_tab")
@@ -183,7 +191,47 @@ class Ui_onionSkinRenderer(object):
         self.absolute_settings_layout.addWidget(self.absolute_tint_btn)
         self.horizontalLayout_4.addLayout(self.absolute_settings_layout)
         self.onionFrames_tab.addTab(self.absolute_tab, "")
-        self.verticalLayout_3.addWidget(self.onionFrames_tab)
+        self.verticalLayout.addWidget(self.onionFrames_tab)
+        self.global_layout = QtWidgets.QHBoxLayout()
+        self.global_layout.setSpacing(6)
+        self.global_layout.setContentsMargins(10, -1, 10, 5)
+        self.global_layout.setObjectName("global_layout")
+        self.globalOpacity_label = QtWidgets.QLabel(self.onionSkins_grp)
+        self.globalOpacity_label.setObjectName("globalOpacity_label")
+        self.global_layout.addWidget(self.globalOpacity_label)
+        self.globalOpacity_slider = QtWidgets.QSlider(self.onionSkins_grp)
+        self.globalOpacity_slider.setStyleSheet("QSlider{\n"
+"border: 1px solid rgb(20, 20, 20);\n"
+"margin: 4px;\n"
+"background: rgb(150, 150, 150);\n"
+"}\n"
+"QSlider::handle{\n"
+"height: 8px;\n"
+"background: rgb(50, 50, 50);\n"
+"border: 1px solid rgb(20, 20, 20);\n"
+"margin: -4px -4px;\n"
+"}\n"
+"QSlider::groove{\n"
+"background: grey;\n"
+"}\n"
+"QSlider::sub-page{\n"
+"background: rgb(75, 75, 75);\n"
+"}\n"
+"QSlider::add-page{\n"
+"background: rgb(150, 150, 150);\n"
+"}")
+        self.globalOpacity_slider.setMaximum(100)
+        self.globalOpacity_slider.setProperty("value", 99)
+        self.globalOpacity_slider.setOrientation(QtCore.Qt.Horizontal)
+        self.globalOpacity_slider.setObjectName("globalOpacity_slider")
+        self.global_layout.addWidget(self.globalOpacity_slider)
+        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
+        self.global_layout.addItem(spacerItem2)
+        self.toggleRenderer_btn = QtWidgets.QPushButton(self.onionSkins_grp)
+        self.toggleRenderer_btn.setObjectName("toggleRenderer_btn")
+        self.global_layout.addWidget(self.toggleRenderer_btn)
+        self.verticalLayout.addLayout(self.global_layout)
+        self.verticalLayout_3.addWidget(self.onionSkins_grp)
         self.onionObjects_grp = QtWidgets.QGroupBox(self.onionSkinRenderer_mainLayout)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -201,8 +249,8 @@ class Ui_onionSkinRenderer(object):
         self.horizontalLayout.addWidget(self.onionObjects_list)
         self.onionObjects_btn_layout = QtWidgets.QVBoxLayout()
         self.onionObjects_btn_layout.setObjectName("onionObjects_btn_layout")
-        spacerItem2 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.onionObjects_btn_layout.addItem(spacerItem2)
+        spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.onionObjects_btn_layout.addItem(spacerItem3)
         self.onionObjects_add_btn = QtWidgets.QPushButton(self.onionObjects_grp)
         self.onionObjects_add_btn.setObjectName("onionObjects_add_btn")
         self.onionObjects_btn_layout.addWidget(self.onionObjects_add_btn)
@@ -212,13 +260,13 @@ class Ui_onionSkinRenderer(object):
         self.onionObjects_clear_btn = QtWidgets.QPushButton(self.onionObjects_grp)
         self.onionObjects_clear_btn.setObjectName("onionObjects_clear_btn")
         self.onionObjects_btn_layout.addWidget(self.onionObjects_clear_btn)
-        spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.onionObjects_btn_layout.addItem(spacerItem3)
+        spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.onionObjects_btn_layout.addItem(spacerItem4)
         self.horizontalLayout.addLayout(self.onionObjects_btn_layout)
         self.verticalLayout_3.addWidget(self.onionObjects_grp)
         onionSkinRenderer.setCentralWidget(self.onionSkinRenderer_mainLayout)
         self.onionSkinRenderer_menubar = QtWidgets.QMenuBar(onionSkinRenderer)
-        self.onionSkinRenderer_menubar.setGeometry(QtCore.QRect(0, 0, 341, 21))
+        self.onionSkinRenderer_menubar.setGeometry(QtCore.QRect(0, 0, 355, 21))
         self.onionSkinRenderer_menubar.setObjectName("onionSkinRenderer_menubar")
         self.menubar_settings = QtWidgets.QMenu(self.onionSkinRenderer_menubar)
         self.menubar_settings.setObjectName("menubar_settings")
@@ -260,6 +308,8 @@ class Ui_onionSkinRenderer(object):
         self.absolute_tint_label.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Tint Color", None, -1))
         self.absolute_tint_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Absolute", None, -1))
         self.onionFrames_tab.setTabText(self.onionFrames_tab.indexOf(self.absolute_tab), QtWidgets.QApplication.translate("onionSkinRenderer", "Absolute", None, -1))
+        self.globalOpacity_label.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Global Opacity", None, -1))
+        self.toggleRenderer_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Toggle Renderer", None, -1))
         self.onionObjects_grp.setTitle(QtWidgets.QApplication.translate("onionSkinRenderer", "Onion Objects", None, -1))
         self.onionObjects_add_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Add Selected", None, -1))
         self.onionObjects_remove_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Remove Selected", None, -1))

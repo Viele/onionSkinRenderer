@@ -14,6 +14,11 @@ import onionSkinRenderer.onionSkinRendererObjectWidget as onionObject
 import onionSkinRenderer.onionSkinRendererPreferences as onionPrefs
 
 
+'''
+2017 Version
+using pyside2
+'''
+
 
 # wrapper to get mayas main window
 def getMayaMainWindow():
@@ -73,11 +78,6 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         # create the ui from the compiled qt designer file
         self.setupUi(self)
 
-        # create the toggle renderer button
-        self.toggleRenderer_btn = QtWidgets.QPushButton('Toggle Renderer')
-        self.onionFrames_tab.setCornerWidget(self.toggleRenderer_btn)
-        self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
-
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.createConnections()
@@ -110,6 +110,9 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.onionObjects_add_btn.clicked.connect(self.addSelectedObjects)
         self.onionObjects_remove_btn.clicked.connect(self.removeSelectedObjects)
         self.onionObjects_clear_btn.clicked.connect(self.clearOnionObjects)
+
+        self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
+        self.globalOpacity_slider.sliderMoved.connect(self.setGlobalOpacity)
 
         self.relative_futureTint_btn.clicked.connect(self.pickColor)
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
@@ -386,6 +389,10 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
                         except Exception as e:
                             # Handle exception
                             print e   
+
+
+    def setGlobalOpacity(self):
+        onionCore.viewRenderOverrideInstance.setGlobalOpacity(self.sender().value())
 
             
             
