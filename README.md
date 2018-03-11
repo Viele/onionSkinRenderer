@@ -14,7 +14,7 @@ https://gum.co/IDfYg
 
 
 ## Compatibility
-It is now tested and working with 2016 and 2017. It should work with 2018 but this is not tested now.
+It is now tested and working with 2016, 2017 and 2018
 
 ## How it works
 This plugin is an extension to the standard viewport2.0 renderer. When Maya Renders a frame, a pass with the specified objects is created and stored. If you now tell the plugin to display information from another frame, it checks if that exists and if yes, draws it above the geometry.
