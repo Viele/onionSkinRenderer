@@ -116,6 +116,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
         self.globalOpacity_slider.sliderMoved.connect(self.setGlobalOpacity)
         self.onionType_cBox.currentTextChanged.connect(self.setOnionType)
+        self.drawBehind_chkBx.stateChanged.connect(self.setDrawBehind)
 
         self.relative_futureTint_btn.clicked.connect(self.pickColor)
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
@@ -395,12 +396,17 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
                             print e   
 
 
+    # 
     def setGlobalOpacity(self):
         onionCore.viewRenderOverrideInstance.setGlobalOpacity(self.sender().value())
 
+    #
     def setOnionType(self):
         onionCore.viewRenderOverrideInstance.setOnionType(self.onionType_cBox.currentIndex())
 
+    #
+    def setDrawBehind(self):
+        onionCore.viewRenderOverrideInstance.setDrawBehind(self.drawBehind_chkBx.isChecked())
 
             
             
@@ -428,6 +434,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             self.setOnionColor(self.absolute_tint_btn, self.mPrefs.setdefault('aTint', [125,0,0]))
 
             self.onionType_cBox.setCurrentIndex(self.mPrefs.setdefault('onionType',1))
+            self.drawBehind_chkBx.setChecked(self.mPrefs.setdefault('drawBehind', True))
 
             self.mRelativeFrameAmount = self.mPrefs.setdefault('relativeFrameAmount',4)
             self.refreshRelativeFrame()
@@ -451,6 +458,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         data['maxBufferSize'] = onionCore.viewRenderOverrideInstance.getMaxBuffer()
         data['outlineWidth'] = onionCore.viewRenderOverrideInstance.getOutlineWidth()
         data['onionType'] = self.onionType_cBox.currentIndex()
+        data['drawBehind'] = self.drawBehind_chkBx.isChecked()
 
         with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
             json.dump(data, outfile)

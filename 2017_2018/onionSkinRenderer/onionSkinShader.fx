@@ -10,6 +10,10 @@ SamplerState gSourceSamp;
 Texture2D gSourceTex2 < string UIWidget = "None"; > = NULL;
 SamplerState gSourceSamp2;
 
+// current onion skin to be used as a stencil to display onion skin behind mesh
+Texture2D gStencilTex < string UIWidget = "None"; > = NULL;
+SamplerState gStencilSampler;
+
 
 
 // Amount to blend source
@@ -29,6 +33,9 @@ int gOutlineWidth = 5;
 // sets the way the onion skin is displayed. 0 = shaded, 1 = shape, 2 = outline
 uniform int gType = 0;
 
+// defines if onion skin is drawn behind or in front of current object
+// 0 = in front, 1 = behind
+uniform int gDrawBehind = 1;
 
 
 
@@ -38,13 +45,14 @@ float4 PS_Blend(VS_TO_PS_ScreenQuad In) : SV_TARGET
 
     float4 source = gSourceTex.Sample(gSourceSamp, In.UV * gUVTransform.zw + gUVTransform.xy);
     float4 onionSource = gSourceTex2.Sample(gSourceSamp2, In.UV * gUVTransform.zw + gUVTransform.xy);
+    float4 stencilSource = (gStencilTex.Sample(gStencilSampler, In.UV * gUVTransform.zw + gUVTransform.xy) * gDrawBehind -1) *-1;
 
 
     // draw shaded
     // normal blending between the original image and the buffered onion skin
     if (gType == 0) 
     {
-        float4 result = float4( lerp(source, onionSource * gTint , gBlendSrc * onionSource.a));		
+        float4 result = float4( lerp(source, onionSource * gTint , gBlendSrc * onionSource.a * stencilSource.a));		
         return result;
     }
 
@@ -56,7 +64,7 @@ float4 PS_Blend(VS_TO_PS_ScreenQuad In) : SV_TARGET
         // mult by 0.75 to darken
         float onionA = onionSource.a * 0.75f;
         float4 onionSourceAlpha = {onionA, onionA, onionA, onionA};
-        float4 result = float4( lerp(source, onionSourceAlpha * gTint , gBlendSrc * onionSourceAlpha.a));		
+        float4 result = float4( lerp(source, onionSourceAlpha * gTint , gBlendSrc * onionSourceAlpha.a * stencilSource.a));		
         return result;
     }
 
@@ -84,7 +92,7 @@ float4 PS_Blend(VS_TO_PS_ScreenQuad In) : SV_TARGET
 
         float4 onionSourceLine = {onionLineColor, onionLineColor, onionLineColor, onionLineColor};
 
-        float4 result = float4( lerp(source, onionSourceLine * gTint , gBlendSrc * onionSourceLine.a));		
+        float4 result = float4( lerp(source, onionSourceLine * gTint , gBlendSrc * onionSourceLine.a * stencilSource.a));		
         return result;
     }
 

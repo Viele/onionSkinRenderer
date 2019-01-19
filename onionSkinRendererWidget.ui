@@ -544,6 +544,16 @@ background: rgb(150, 150, 150);
            </property>
           </spacer>
          </item>
+         <item>
+          <widget class="QCheckBox" name="drawBehind_chkBx">
+           <property name="text">
+            <string>Draw Behind</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>

@@ -137,6 +137,7 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mGlobalOpacity = 1.0
         self.mOnionType = 0
         self.mOutlineWidth = 3
+        self.mDrawBehind = 1
 
         # If this is True, we will show onions on the next keyticks
         # e.g. if mRelativeOnions has 1 and 3 in it, it will draw
@@ -263,6 +264,8 @@ class viewRenderOverride(omr.MRenderOverride):
                 if not self.mRelativeKeyDisplay:
                     blendPass.setActive(True)
                 blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[targetFrame])
+                blendPass.setStencilTarget(self.mOnionBuffer[self.mCurrentFrame])
+
                 # future tint
                 if targetFrame > self.mCurrentFrame:
                     blendPass.setTint((
@@ -288,6 +291,7 @@ class viewRenderOverride(omr.MRenderOverride):
             if blendPass.mFrame in self.mOnionBuffer:
                 blendPass.setActive(True)
                 blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[blendPass.mFrame])
+                blendPass.setStencilTarget(self.mOnionBuffer[self.mCurrentFrame])
                 blendPass.setTint((
                     self.mAbsoluteTint[0]/255.0 / self.lerp(1.0, self.mAbsoluteTint[0]/255.0, self.mAbsoluteTintStrength),
                     self.mAbsoluteTint[1]/255.0 / self.lerp(1.0, self.mAbsoluteTint[1]/255.0, self.mAbsoluteTintStrength),
@@ -636,6 +640,15 @@ class viewRenderOverride(omr.MRenderOverride):
     # 
     def getOutlineWidth(self):
         return self.mOutlineWidth
+        
+    #
+    def setDrawBehind(self, value):
+        self.mDrawBehind = int(value)
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    #
+    def getDrawBehind(self):
+        return self.mDrawBehind
 
     
 
@@ -732,6 +745,7 @@ class viewRenderQuadRender(omr.MQuadRender):
 
         self.mTarget = None
         self.mInputTarget = [None, None]
+        self.mStencilTarget = None
 
         self.mShader = self.kEffectNone
 
@@ -781,6 +795,8 @@ class viewRenderQuadRender(omr.MQuadRender):
             self.mShaderInstance.setParameter("gTint", self.mTint)
             self.mShaderInstance.setParameter("gType", viewRenderOverrideInstance.mOnionType)
             self.mShaderInstance.setParameter("gOutlineWidth", viewRenderOverrideInstance.mOutlineWidth)
+            self.mShaderInstance.setParameter("gStencilTex", self.mStencilTarget)
+            self.mShaderInstance.setParameter("gDrawBehind", viewRenderOverrideInstance.mDrawBehind)
 
 
         if kDebugAll or kDebugQuadRender:
@@ -806,6 +822,9 @@ class viewRenderQuadRender(omr.MQuadRender):
     def setInputTargets(self, target1, target2):
         self.mInputTarget[0] = target1
         self.mInputTarget[1] = target2
+
+    def setStencilTarget(self, stencil):
+        self.mStencilTarget = stencil
     
     def setActive(self, flag):
         self.mActive = flag

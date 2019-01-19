@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\doris\Documents\GitHub\onionSkinRenderer\onionSkinRendererWidget.ui'
 #
-# Created: Thu Jan 17 20:35:40 2019
+# Created: Sat Jan 19 14:03:11 2019
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -256,6 +256,12 @@ class Ui_onionSkinRenderer(object):
         self.onionType_cBox.addItem("")
         self.onionType_cBox.addItem("")
         self.onionType_layout.addWidget(self.onionType_cBox)
+        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.onionType_layout.addItem(spacerItem3)
+        self.drawBehind_chkBx = QtWidgets.QCheckBox(self.onionSkins_grp)
+        self.drawBehind_chkBx.setChecked(True)
+        self.drawBehind_chkBx.setObjectName("drawBehind_chkBx")
+        self.onionType_layout.addWidget(self.drawBehind_chkBx)
         self.verticalLayout.addLayout(self.onionType_layout)
         self.verticalLayout_3.addWidget(self.onionSkins_grp)
         self.onionObjects_grp = QtWidgets.QGroupBox(self.onionSkinRenderer_mainLayout)
@@ -275,8 +281,8 @@ class Ui_onionSkinRenderer(object):
         self.horizontalLayout.addWidget(self.onionObjects_list)
         self.onionObjects_btn_layout = QtWidgets.QVBoxLayout()
         self.onionObjects_btn_layout.setObjectName("onionObjects_btn_layout")
-        spacerItem3 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.onionObjects_btn_layout.addItem(spacerItem3)
+        spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.onionObjects_btn_layout.addItem(spacerItem4)
         self.onionObjects_add_btn = QtWidgets.QPushButton(self.onionObjects_grp)
         self.onionObjects_add_btn.setObjectName("onionObjects_add_btn")
         self.onionObjects_btn_layout.addWidget(self.onionObjects_add_btn)
@@ -286,8 +292,8 @@ class Ui_onionSkinRenderer(object):
         self.onionObjects_clear_btn = QtWidgets.QPushButton(self.onionObjects_grp)
         self.onionObjects_clear_btn.setObjectName("onionObjects_clear_btn")
         self.onionObjects_btn_layout.addWidget(self.onionObjects_clear_btn)
-        spacerItem4 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-        self.onionObjects_btn_layout.addItem(spacerItem4)
+        spacerItem5 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        self.onionObjects_btn_layout.addItem(spacerItem5)
         self.horizontalLayout.addLayout(self.onionObjects_btn_layout)
         self.verticalLayout_3.addWidget(self.onionObjects_grp)
         onionSkinRenderer.setCentralWidget(self.onionSkinRenderer_mainLayout)
@@ -341,6 +347,7 @@ class Ui_onionSkinRenderer(object):
         self.onionType_cBox.setItemText(0, QtWidgets.QApplication.translate("onionSkinRenderer", "Shaded", None, -1))
         self.onionType_cBox.setItemText(1, QtWidgets.QApplication.translate("onionSkinRenderer", "Shape", None, -1))
         self.onionType_cBox.setItemText(2, QtWidgets.QApplication.translate("onionSkinRenderer", "Outline", None, -1))
+        self.drawBehind_chkBx.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Draw Behind", None, -1))
         self.onionObjects_grp.setTitle(QtWidgets.QApplication.translate("onionSkinRenderer", "Onion Objects", None, -1))
         self.onionObjects_add_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Add Selected", None, -1))
         self.onionObjects_remove_btn.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Remove Selected", None, -1))

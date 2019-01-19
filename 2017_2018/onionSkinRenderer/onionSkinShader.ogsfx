@@ -24,6 +24,16 @@ uniform sampler2D gSourceSamp2 = sampler_state
 };
 
 
+// current onion skin to be used as a stencil to display onion skin behind mesh
+uniform texture2D gStencilTex : SourceTexture3;
+
+// sampler for stencil
+uniform sampler2D gStencilSampler = sampler_state
+{
+    Texture = <gStencilTex>;
+};
+
+
 
 
 // Amount to blend source
@@ -44,6 +54,9 @@ uniform int gOutlineWidth = 5;
 // sets the way the onion skin is displayed. 0 = shaded, 1 = shape, 2 = outline
 uniform int gType = 0;
 
+// defines if onion skin is drawn behind or in front of current object
+// 0 = in front, 1 = behind
+uniform int gDrawBehind = 1;
 
 
 
@@ -56,12 +69,13 @@ GLSLShader PS_Blend
 	{
         vec4 source = texture2D(gSourceSamp, VSUV * gUVTransform.zw + gUVTransform.xy);
         vec4 onionSource = texture2D(gSourceSamp2, VSUV * gUVTransform.zw + gUVTransform.xy);
+        vec4 stencilSource = (texture2D(gStencilSampler, VSUV * gUVTransform.zw + gUVTransform.xy) * gDrawBehind -1 ) *-1;
 
 
         // draw shaded
         // normal blending between the original image and the buffered onion skin
         if(gType == 0){
-            vec4 result = vec4( lerp(source, onionSource * gTint , gBlendSrc * onionSource.a));		
+            vec4 result = vec4( lerp(source, onionSource * gTint , gBlendSrc * onionSource.a * stencilSource.a));		
             colorOut = result;
         }
 
@@ -70,7 +84,7 @@ GLSLShader PS_Blend
         // uses only the alpha channel for blending, ommiting any shaded information
         else if(gType == 1){
             vec4 onionSourceAlpha = vec4(onionSource.a) * 0.75; // mult by 0.75 to darken
-            vec4 result = vec4( lerp(source, onionSourceAlpha *gTint , gBlendSrc * onionSourceAlpha.a));		
+            vec4 result = vec4( lerp(source, onionSourceAlpha *gTint , gBlendSrc * onionSourceAlpha.a * stencilSource.a));		
 
             colorOut = result;
         }
@@ -96,7 +110,7 @@ GLSLShader PS_Blend
                 * clamp(onionSourceUp.a + onionSourceUpRight.a + onionSourceUpLeft.a + onionSourceDown.a + onionSourceDownLeft.a + onionSourceDownRight.a + onionSourceLeft.a + onionSourceRight.a,0,1);
 
 
-            vec4 result = vec4( lerp(source, onionSourceLine *gTint , gBlendSrc * onionSourceLine.a));		
+            vec4 result = vec4( lerp(source, onionSourceLine *gTint , gBlendSrc * onionSourceLine.a * stencilSource.a));		
 
             colorOut = result;
         }
