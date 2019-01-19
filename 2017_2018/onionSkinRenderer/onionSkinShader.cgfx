@@ -1,42 +1,107 @@
 
 #include "Common.cgh"
 
-// The source texture
+// The original image
 texture gSourceTex : SourceTexture
 <
     string UIName = "Source Texture";
 >;
 
-// Sampler of source texture
+// Sampler of original image
 sampler2D gSourceSamp = sampler_state
 {
     Texture = <gSourceTex>;
 };
 
-// The 2nd source texture
+// The onion skin buffer
 texture gSourceTex2 : SourceTexture2
 <
     string UIName = "Source Texture 2";
 >;
 
-// Sampler of 2nd source texture
+// Sampler of onion skin buffer
 sampler2D gSourceSamp2 = sampler_state
 {
     Texture = <gSourceTex2>;
 };
 
+
+
 // Amount to blend source
 float gBlendSrc = 0.3f;
+
+// actually don't know what that is used for. Was used in the example and doesn't break anything
 float4 gUVTransform : RelativeViewportDimensions;
+
+// viewport size in pixels to map from UV space to pixel space
+float2 gPixelTransform : ViewportPixelSize;
+
+// color with which each onion skin pixel is multiplied
 float4 gTint = {0.5, 0.5, 1.0, 1.0};
+
+// outline width in pixels
+int gOutlineWidth = 5;
+
+// sets the way the onion skin is displayed. 0 = shaded, 1 = shape, 2 = outline
+int gType = 0;
+
+
+
+
+
+
 
 // Simple blending between 2 images
 float4 PS_Blend(VS_TO_PS_ScreenQuad In) : COLOR0
 {
     float4 source = tex2D(gSourceSamp, In.UV * gUVTransform.zw + gUVTransform.xy);
-    float4 source2 = tex2D(gSourceSamp2, In.UV * gUVTransform.zw + gUVTransform.xy);
-	float4 result = float4( lerp(source, source2 * gTint , gBlendSrc * source2.a));		
-    return result;
+    float4 onionSource = tex2D(gSourceSamp2, In.UV * gUVTransform.zw + gUVTransform.xy);
+    
+
+    // draw shaded
+    // normal blending between the original image and the buffered onion skin
+    if(gType == 0){
+        float4 result = float4( lerp(source, onionSource * gTint , gBlendSrc * onionSource.a));		
+        return result;
+    }
+
+
+    // draw shape
+    // uses only the alpha channel for blending, ommiting any shaded information
+    else if(gType == 1){
+        float4 onionSourceAlpha = float4(onionSource.a) * 0.75; // mult by 0.75 to darken
+        float4 result = float4( lerp(source, onionSourceAlpha *gTint , gBlendSrc * onionSourceAlpha.a));		
+
+        return result;
+    }
+
+
+    // draw outline
+    // creates an outline around the onion skins with the thickness specified in gOutlineWidth
+    else if(gType == 2){
+        // sample in 8 directions
+        float4 onionSourceUp =        tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(0,-gOutlineWidth) / gPixelTransform.xy);
+        float4 onionSourceUpLeft =    tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(gOutlineWidth/1.5,-gOutlineWidth/1.5) / gPixelTransform.xy);
+        float4 onionSourceUpRight =   tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(-gOutlineWidth/1.5,-gOutlineWidth/1.5) / gPixelTransform.xy);
+        float4 onionSourceDown =      tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(0,gOutlineWidth) / gPixelTransform.xy);
+        float4 onionSourceDownLeft =  tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(gOutlineWidth/1.5,gOutlineWidth/1.5) / gPixelTransform.xy);
+        float4 onionSourceDownRight = tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(-gOutlineWidth/1.5,gOutlineWidth/1.5) / gPixelTransform.xy);
+        float4 onionSourceLeft =      tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(gOutlineWidth,0) / gPixelTransform);
+        float4 onionSourceRight =     tex2D(gSourceSamp2, (In.UV * gUVTransform.zw + gUVTransform.xy) + float2(-gOutlineWidth,0) / gPixelTransform);
+
+        // inverts the current alpha. That means the outline starts just outside the shape of the buffered onion skin
+        // OR links all samples (+)
+        float4 onionSourceLine = float4(onionSource.a-1) 
+            * -1 
+            * clamp(onionSourceUp.a + onionSourceUpRight.a + onionSourceUpLeft.a + onionSourceDown.a + onionSourceDownLeft.a + onionSourceDownRight.a + onionSourceLeft.a + onionSourceRight.a,0,1);
+
+
+        float4 result = float4( lerp(source, onionSourceLine *gTint , gBlendSrc * onionSourceLine.a));		
+
+        return result;
+    }
+
+    return source;
 }
 
 // The main technique.

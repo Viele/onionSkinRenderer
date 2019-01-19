@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>280</width>
-    <height>97</height>
+    <width>278</width>
+    <height>118</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,6 +57,30 @@
        </property>
        <property name="value">
         <number>4</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="prefs_outlineWidth">
+     <item>
+      <widget class="QLabel" name="outlineWidth_label">
+       <property name="text">
+        <string>Outline Width</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="outlineWidth_spinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>512</number>
+       </property>
+       <property name="value">
+        <number>3</number>
        </property>
       </widget>
      </item>

@@ -82,6 +82,8 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
         self.createConnections()
 
+        self.setOnionType()
+
         # load settings from the settings file
         self.loadSettings()
 
@@ -113,6 +115,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
         self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
         self.globalOpacity_slider.sliderMoved.connect(self.setGlobalOpacity)
+        self.onionType_cBox.currentTextChanged.connect(self.setOnionType)
 
         self.relative_futureTint_btn.clicked.connect(self.pickColor)
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
@@ -337,6 +340,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         if prefUi.exec_():
             values = prefUi.getValues()
             onionCore.viewRenderOverrideInstance.setMaxBuffer(values['maxBuffer'])
+            onionCore.viewRenderOverrideInstance.setOutlineWidth(values['outlineWidth'])
             self.mRelativeFrameAmount = values['relativeKeyCount']*2
             self.refreshRelativeFrame()
             self.saveSettings()
@@ -394,6 +398,10 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     def setGlobalOpacity(self):
         onionCore.viewRenderOverrideInstance.setGlobalOpacity(self.sender().value())
 
+    def setOnionType(self):
+        onionCore.viewRenderOverrideInstance.setOnionType(self.onionType_cBox.currentIndex())
+
+
             
             
 
@@ -419,12 +427,16 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             self.setOnionColor(self.relative_pastTint_btn, self.mPrefs.setdefault('rPastTint',[0,125,0]))
             self.setOnionColor(self.absolute_tint_btn, self.mPrefs.setdefault('aTint', [125,0,0]))
 
+            self.onionType_cBox.setCurrentIndex(self.mPrefs.setdefault('onionType',1))
+
             self.mRelativeFrameAmount = self.mPrefs.setdefault('relativeFrameAmount',4)
             self.refreshRelativeFrame()
 
             self.relative_step_spinBox.setValue(self.mPrefs.setdefault('relativeStep', 1))
 
             onionCore.viewRenderOverrideInstance.setMaxBuffer(self.mPrefs.setdefault('maxBufferSize', 200))
+            onionCore.viewRenderOverrideInstance.setOutlineWidth(self.mPrefs.setdefault('outlineWidth',3))
+
     
     # save values into a json file
     def saveSettings(self):
@@ -437,6 +449,8 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         data['relativeFrameAmount'] = self.mRelativeFrameAmount
         data['relativeStep'] = self.relative_step_spinBox.value()
         data['maxBufferSize'] = onionCore.viewRenderOverrideInstance.getMaxBuffer()
+        data['outlineWidth'] = onionCore.viewRenderOverrideInstance.getOutlineWidth()
+        data['onionType'] = self.onionType_cBox.currentIndex()
 
         with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
             json.dump(data, outfile)
@@ -493,9 +507,11 @@ class OnionPreferences(QtWidgets.QDialog, onionPrefs.Ui_onionSkinRendererPrefere
         self.setupUi(self)
         self.relativeKeyCount_spinBox.setValue(parent.mRelativeFrameAmount/2)
         self.maxBuffer_spinBox.setValue(onionCore.viewRenderOverrideInstance.getMaxBuffer())
+        self.outlineWidth_spinBox.setValue(onionCore.viewRenderOverrideInstance.getOutlineWidth())
 
     def getValues(self):
         values = {}
         values['maxBuffer'] = self.maxBuffer_spinBox.value()
         values['relativeKeyCount'] = self.relativeKeyCount_spinBox.value()
+        values['outlineWidth'] = self.outlineWidth_spinBox.value()
         return values

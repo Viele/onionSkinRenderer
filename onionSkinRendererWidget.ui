@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>355</width>
-    <height>474</height>
+    <width>404</width>
+    <height>497</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -199,24 +199,40 @@ background: rgb(150, 150, 150);
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="relative_futureTint_btn">
-               <property name="styleSheet">
-                <string notr="true">background-color: rgb(20, 255, 114)</string>
-               </property>
-               <property name="text">
-                <string>Future</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="relative_pastTint_btn">
-               <property name="styleSheet">
-                <string notr="true">background-color:rgb(255, 26, 75)</string>
-               </property>
-               <property name="text">
-                <string>Past</string>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <item>
+                <widget class="QPushButton" name="relative_pastTint_btn">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">background-color:rgb(255, 26, 75)</string>
+                 </property>
+                 <property name="text">
+                  <string>Past</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="relative_futureTint_btn">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(20, 255, 114)</string>
+                 </property>
+                 <property name="text">
+                  <string>Future</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
@@ -317,6 +333,19 @@ background: rgb(150, 150, 150);
            <item>
             <layout class="QVBoxLayout" name="absolute_settings_layout">
              <item>
+              <spacer name="absolute_tint_spacer">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
               <widget class="QLabel" name="absolute_tint_strength_label">
                <property name="text">
                 <string>Tint Strength</string>
@@ -357,19 +386,6 @@ background: rgb(150, 150, 150);
                 <enum>Qt::Horizontal</enum>
                </property>
               </widget>
-             </item>
-             <item>
-              <spacer name="absolute_tint_spacer">
-               <property name="orientation">
-                <enum>Qt::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
              </item>
              <item>
               <widget class="QLabel" name="absolute_tint_label">
@@ -475,6 +491,61 @@ background: rgb(150, 150, 150);
          </item>
         </layout>
        </item>
+       <item>
+        <layout class="QHBoxLayout" name="onionType_layout">
+         <property name="leftMargin">
+          <number>10</number>
+         </property>
+         <property name="rightMargin">
+          <number>10</number>
+         </property>
+         <property name="bottomMargin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="onionType_label">
+           <property name="text">
+            <string>Onion Type</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="onionType_cBox">
+           <property name="currentIndex">
+            <number>1</number>
+           </property>
+           <item>
+            <property name="text">
+             <string>Shaded</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Shape</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Outline</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
       </layout>
      </widget>
     </item>
@@ -567,7 +638,7 @@ background: rgb(150, 150, 150);
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>355</width>
+     <width>404</width>
      <height>21</height>
     </rect>
    </property>

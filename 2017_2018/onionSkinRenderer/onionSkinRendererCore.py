@@ -32,7 +32,7 @@ start here to see whats wrong
 kDebugAll = False
 kDebugRenderOverride = False
 kDebugSceneRender = False
-kDebugQuadRender = False
+kDebugQuadRender = True
 kPluginName = "Onion Skin Renderer"
 
 
@@ -135,6 +135,8 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativeTintStrength = 1.0
         self.mAbsoluteTintStrength = 1.0
         self.mGlobalOpacity = 1.0
+        self.mOnionType = 0
+        self.mOutlineWidth = 3
 
         # If this is True, we will show onions on the next keyticks
         # e.g. if mRelativeOnions has 1 and 3 in it, it will draw
@@ -621,6 +623,20 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativeStep = value
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
+    # 
+    def setOnionType(self, onionType):
+        self.mOnionType = onionType
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+    
+    # 
+    def setOutlineWidth(self, width):
+        self.mOutlineWidth = width
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+
+    # 
+    def getOutlineWidth(self):
+        return self.mOutlineWidth
+
     
 
 
@@ -727,6 +743,7 @@ class viewRenderQuadRender(omr.MQuadRender):
 
         self.mOpacity = 0.5
 
+
         
 
     def __del__(self):
@@ -762,6 +779,9 @@ class viewRenderQuadRender(omr.MQuadRender):
             self.mShaderInstance.setParameter("gSourceTex2", self.mInputTarget[1])
             self.mShaderInstance.setParameter("gBlendSrc", self.mOpacity*viewRenderOverrideInstance.mGlobalOpacity)
             self.mShaderInstance.setParameter("gTint", self.mTint)
+            self.mShaderInstance.setParameter("gType", viewRenderOverrideInstance.mOnionType)
+            self.mShaderInstance.setParameter("gOutlineWidth", viewRenderOverrideInstance.mOutlineWidth)
+
 
         if kDebugAll or kDebugQuadRender:
             print self.mShaderInstance
@@ -798,6 +818,8 @@ class viewRenderQuadRender(omr.MQuadRender):
 
     def setFrame(self, frame):
         self.mFrame = frame
+
+
 
 
 
