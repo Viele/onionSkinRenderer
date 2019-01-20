@@ -127,12 +127,16 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.absolute_tint_btn.clicked.connect(self.pickColor)
         self.absolute_addCrnt_btn.clicked.connect(self.addAbsoluteFrame)
         self.absolute_add_btn.clicked.connect(self.addAbsoluteFrameFromSpinbox)
-        self.absolute_tint_strength_slider.sliderMoved.connect(self.setAbsoluteTintStrength)
         self.absolute_clear_btn.clicked.connect(self.clearAbsoluteFrames)
 
         self.settings_clearBuffer.triggered.connect(self.clearBuffer)
         self.settings_autoClearBuffer.triggered.connect(self.setAutoClearBuffer)
         self.settings_preferences.triggered.connect(self.changePrefs)
+
+        self.onionObjects_grp.clicked.connect(self.toggleGroupBox)
+        self.onionSkinFrames_grp.clicked.connect(self.toggleGroupBox)
+        self.onionSkinSettings_grp.clicked.connect(self.toggleGroupBox)
+
 
 
     # ------------------
@@ -407,6 +411,15 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     #
     def setDrawBehind(self):
         onionCore.viewRenderOverrideInstance.setDrawBehind(self.drawBehind_chkBx.isChecked())
+
+    #
+    def toggleGroupBox(self):
+        h = self.sender().maximumHeight()
+
+        if h > 100000:
+            self.sender().setMaximumHeight(14)
+        else:
+            self.sender().setMaximumHeight(200000)
 
             
             

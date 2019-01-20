@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\chris\OneDrive\Dokumente\maya\scripts\onionSkinRenderer\onionSkinRendererFrameWidget.ui'
+# Form implementation generated from reading ui file 'C:\Users\doris\Documents\GitHub\onionSkinRenderer\onionSkinRendererFrameWidget.ui'
 #
-# Created: Wed Aug 09 16:23:34 2017
+# Created: Sun Jan 20 22:31:03 2019
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_onionSkinFrame_layout(object):
     def setupUi(self, onionSkinFrame_layout):
         onionSkinFrame_layout.setObjectName("onionSkinFrame_layout")
-        onionSkinFrame_layout.resize(267, 28)
+        onionSkinFrame_layout.resize(233, 16)
         onionSkinFrame_layout.setMinimumSize(QtCore.QSize(0, 16))
         onionSkinFrame_layout.setStyleSheet("QWidget::border: 1px solid rgb(18, 18, 18)")
         self.frame_widget_layout = QtWidgets.QHBoxLayout(onionSkinFrame_layout)
@@ -42,14 +42,15 @@ class Ui_onionSkinFrame_layout(object):
         self.frame_opacity_slider.setMinimumSize(QtCore.QSize(30, 0))
         self.frame_opacity_slider.setStyleSheet("QSlider{\n"
 "border: 1px solid rgb(20, 20, 20);\n"
-"margin: 4px;\n"
+"margin: 2px;\n"
 "background: rgb(150, 150, 150);\n"
+"height: 15px;\n"
 "}\n"
 "QSlider::handle{\n"
-"height: 8px;\n"
+"height: 4px;\n"
 "background: rgb(50, 50, 50);\n"
 "border: 1px solid rgb(20, 20, 20);\n"
-"margin: -4px -4px;\n"
+"margin: -2px -2px;\n"
 "}\n"
 "QSlider::groove{\n"
 "background: grey;\n"
