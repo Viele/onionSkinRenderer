@@ -32,7 +32,7 @@ start here to see whats wrong
 kDebugAll = False
 kDebugRenderOverride = False
 kDebugSceneRender = False
-kDebugQuadRender = True
+kDebugQuadRender = False
 kPluginName = "Onion Skin Renderer"
 
 
@@ -132,8 +132,7 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mRelativePastTint = [0,255,0]
         self.mAbsoluteTint = [0,0,255]
         # tint strengths, 1 is full tint
-        self.mRelativeTintStrength = 1.0
-        self.mAbsoluteTintStrength = 1.0
+        self.mTintStrength = 1.0
         self.mGlobalOpacity = 1.0
         self.mOnionType = 0
         self.mOutlineWidth = 3
@@ -269,16 +268,16 @@ class viewRenderOverride(omr.MRenderOverride):
                 # future tint
                 if targetFrame > self.mCurrentFrame:
                     blendPass.setTint((
-                        (self.mRelativeFutureTint[0]/255.0) / self.lerp(1.0, self.mRelativeFutureTint[0]/255.0, self.mRelativeTintStrength),
-                        self.mRelativeFutureTint[1]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[1]/255.0, self.mRelativeTintStrength), 
-                        self.mRelativeFutureTint[2]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[2]/255.0, self.mRelativeTintStrength), 
+                        (self.mRelativeFutureTint[0]/255.0) / self.lerp(1.0, self.mRelativeFutureTint[0]/255.0, self.mTintStrength),
+                        self.mRelativeFutureTint[1]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[1]/255.0, self.mTintStrength), 
+                        self.mRelativeFutureTint[2]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[2]/255.0, self.mTintStrength), 
                         1.0))
                 # past tint
                 else:
                     blendPass.setTint((
-                        self.mRelativePastTint[0]/255.0 / self.lerp(1.0, self.mRelativePastTint[0]/255.0, self.mRelativeTintStrength),
-                        self.mRelativePastTint[1]/255.0 / self.lerp(1.0, self.mRelativePastTint[1]/255.0, self.mRelativeTintStrength), 
-                        self.mRelativePastTint[2]/255.0 / self.lerp(1.0, self.mRelativePastTint[2]/255.0, self.mRelativeTintStrength),  
+                        self.mRelativePastTint[0]/255.0 / self.lerp(1.0, self.mRelativePastTint[0]/255.0, self.mTintStrength),
+                        self.mRelativePastTint[1]/255.0 / self.lerp(1.0, self.mRelativePastTint[1]/255.0, self.mTintStrength), 
+                        self.mRelativePastTint[2]/255.0 / self.lerp(1.0, self.mRelativePastTint[2]/255.0, self.mTintStrength),  
                         1.0))
             else:
                 #pass
@@ -293,9 +292,9 @@ class viewRenderOverride(omr.MRenderOverride):
                 blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[blendPass.mFrame])
                 blendPass.setStencilTarget(self.mOnionBuffer[self.mCurrentFrame])
                 blendPass.setTint((
-                    self.mAbsoluteTint[0]/255.0 / self.lerp(1.0, self.mAbsoluteTint[0]/255.0, self.mAbsoluteTintStrength),
-                    self.mAbsoluteTint[1]/255.0 / self.lerp(1.0, self.mAbsoluteTint[1]/255.0, self.mAbsoluteTintStrength),
-                    self.mAbsoluteTint[2]/255.0 / self.lerp(1.0, self.mAbsoluteTint[2]/255.0, self.mAbsoluteTintStrength)
+                    self.mAbsoluteTint[0]/255.0 / self.lerp(1.0, self.mAbsoluteTint[0]/255.0, self.mTintStrength),
+                    self.mAbsoluteTint[1]/255.0 / self.lerp(1.0, self.mAbsoluteTint[1]/255.0, self.mTintStrength),
+                    self.mAbsoluteTint[2]/255.0 / self.lerp(1.0, self.mAbsoluteTint[2]/255.0, self.mTintStrength)
                 ))
             else:
                 blendPass.setActive(False)
@@ -529,14 +528,10 @@ class viewRenderOverride(omr.MRenderOverride):
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
     
     #
-    def setRelativeTintStrength(self, strength):
-        self.mRelativeTintStrength = strength / 100.0
+    def setTintStrength(self, strength):
+        self.mTintStrength = strength / 100.0
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
-    #
-    def setAbsoluteTintStrength(self, strength):
-        self.mAbsoluteTintStrength = strength / 100.0
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     #
     def setRelativeOpacity(self, frame, opacity):

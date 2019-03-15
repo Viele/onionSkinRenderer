@@ -120,7 +120,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
         self.relative_futureTint_btn.clicked.connect(self.pickColor)
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
-        self.relative_tint_strength_slider.sliderMoved.connect(self.setRelativeTintStrength)
+        self.relative_tint_strength_slider.sliderMoved.connect(self.setTintStrength)
         self.relative_keyframes_chkbx.clicked.connect(self.toggleRelativeKeyframeDisplay)
         self.relative_step_spinBox.valueChanged.connect(self.setRelativeStep)
 
@@ -324,13 +324,9 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         frame = self.sender().parent().findChild(QtWidgets.QLabel, 'frame_number').text()
         onionCore.viewRenderOverrideInstance.setAbsoluteOpacity(int(frame), opacity)
 
-    def setRelativeTintStrength(self):
-        onionCore.viewRenderOverrideInstance.setRelativeTintStrength(
-            self.sender().value()
-        )
-
-    def setAbsoluteTintStrength(self):
-        onionCore.viewRenderOverrideInstance.setAbsoluteTintStrength(
+    # 
+    def setTintStrength(self):
+        onionCore.viewRenderOverrideInstance.setTintStrength(
             self.sender().value()
         )
 
