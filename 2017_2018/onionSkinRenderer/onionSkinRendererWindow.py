@@ -461,11 +461,16 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             onionCore.viewRenderOverrideInstance.setTintSeed(self.mPrefs.setdefault('tintSeed', 0))
             self.tint_type_cBox.setCurrentIndex(self.mPrefs.setdefault('tintType',0))
 
+
             self.onionType_cBox.setCurrentIndex(self.mPrefs.setdefault('onionType',1))
             self.drawBehind_chkBx.setChecked(self.mPrefs.setdefault('drawBehind', True))
 
             self.mRelativeFrameAmount = self.mPrefs.setdefault('relativeFrameAmount',4)
             self.refreshRelativeFrame()
+            activeRelativeFrames = self.mPrefs.setdefault('activeRelativeFrames',[])
+            for child in self.relative_frame.findChildren(OnionListFrame):
+                if int(child.frame_number.text()) in activeRelativeFrames:
+                    child.frame_visibility_btn.setChecked(True)
 
             self.relative_step_spinBox.setValue(self.mPrefs.setdefault('relativeStep', 1))
 
@@ -490,6 +495,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         data['outlineWidth'] = onionCore.viewRenderOverrideInstance.getOutlineWidth()
         data['onionType'] = self.onionType_cBox.currentIndex()
         data['drawBehind'] = self.drawBehind_chkBx.isChecked()
+        data['activeRelativeFrames'] = self.getActiveRelativeFrameIndices()
 
         with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
             json.dump(data, outfile)
@@ -498,6 +504,14 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     # 
     def extractRGBFromStylesheet(self, s):
         return map(int,(s[s.find("(")+1:s.find(")")]).split(','))
+
+    def getActiveRelativeFrameIndices(self):
+        activeFrames = []
+        # clear the frame of all widgets first
+        for child in self.relative_frame.findChildren(OnionListFrame):
+            if child.frame_visibility_btn.isChecked():
+                activeFrames.append(int(child.frame_number.text()))
+        return activeFrames
 
 
 
