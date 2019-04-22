@@ -135,7 +135,7 @@ class viewRenderOverride(omr.MRenderOverride):
         # tint strengths, 1 is full tint
         self.mTintStrength = 1.0
         self.mGlobalOpacity = 1.0
-        self.mOnionType = 0
+        self.mOnionType = 1
         self.mOutlineWidth = 3
         self.mDrawBehind = 1
         self.mTintType = 0
@@ -664,7 +664,7 @@ class viewRenderOverride(omr.MRenderOverride):
     # 
     def setOnionType(self, onionType):
         self.mOnionType = onionType
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+        self.refresh()
     
     # 
     def setOutlineWidth(self, width):
