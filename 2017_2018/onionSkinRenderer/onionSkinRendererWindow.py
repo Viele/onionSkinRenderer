@@ -137,6 +137,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.settings_clearBuffer.triggered.connect(self.clearBuffer)
         self.settings_autoClearBuffer.triggered.connect(self.setAutoClearBuffer)
         self.settings_preferences.triggered.connect(self.changePrefs)
+        self.settings_saveSettings.triggered.connect(self.saveSettings)
 
         self.onionObjects_grp.clicked.connect(self.toggleGroupBox)
         self.onionSkinFrames_grp.clicked.connect(self.toggleGroupBox)

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'D:\Personal Work\2019\onionSkinRenderer\onionSkinRendererWidget.ui'
 #
-# Created: Mon Apr 22 12:13:16 2019
+# Created: Mon Apr 22 12:49:26 2019
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -440,9 +440,12 @@ class Ui_onionSkinRenderer(object):
         self.settings_autoClearBuffer.setObjectName("settings_autoClearBuffer")
         self.settings_preferences = QtWidgets.QAction(onionSkinRenderer)
         self.settings_preferences.setObjectName("settings_preferences")
+        self.settings_saveSettings = QtWidgets.QAction(onionSkinRenderer)
+        self.settings_saveSettings.setObjectName("settings_saveSettings")
         self.menubar_settings.addAction(self.settings_clearBuffer)
         self.menubar_settings.addAction(self.settings_autoClearBuffer)
         self.menubar_settings.addAction(self.settings_preferences)
+        self.menubar_settings.addAction(self.settings_saveSettings)
         self.onionSkinRenderer_menubar.addAction(self.menubar_settings.menuAction())
 
         self.retranslateUi(onionSkinRenderer)
@@ -483,4 +486,5 @@ class Ui_onionSkinRenderer(object):
         self.settings_clearBuffer.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Clear Buffer", None, -1))
         self.settings_autoClearBuffer.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Auto Clear Buffer", None, -1))
         self.settings_preferences.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Preferences", None, -1))
+        self.settings_saveSettings.setText(QtWidgets.QApplication.translate("onionSkinRenderer", "Save Settings", None, -1))
 

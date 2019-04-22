@@ -935,6 +935,7 @@ background: rgb(150, 150, 150);
     <addaction name="settings_clearBuffer"/>
     <addaction name="settings_autoClearBuffer"/>
     <addaction name="settings_preferences"/>
+    <addaction name="settings_saveSettings"/>
    </widget>
    <addaction name="menubar_settings"/>
   </widget>
@@ -961,6 +962,11 @@ background: rgb(150, 150, 150);
   <action name="settings_preferences">
    <property name="text">
     <string>Preferences</string>
+   </property>
+  </action>
+  <action name="settings_saveSettings">
+   <property name="text">
+    <string>Save Settings</string>
    </property>
   </action>
  </widget>
