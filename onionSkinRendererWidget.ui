@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>482</width>
-    <height>647</height>
+    <width>488</width>
+    <height>684</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -85,8 +85,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>468</width>
-            <height>555</height>
+            <width>474</width>
+            <height>592</height>
            </rect>
           </property>
           <property name="sizePolicy">
@@ -538,28 +538,6 @@
               </property>
               <item>
                <layout class="QGridLayout" name="gridLayout_2">
-                <item row="2" column="0">
-                 <widget class="QLabel" name="globalOpacity_label">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>90</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Global Opacity</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
                 <item row="4" column="0">
                  <widget class="QLabel" name="label">
                   <property name="sizePolicy">
@@ -580,40 +558,6 @@
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
                   </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QComboBox" name="onionType_cBox">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>80</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                  <property name="currentIndex">
-                   <number>1</number>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>Shaded</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Shape</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Outline</string>
-                   </property>
-                  </item>
                  </widget>
                 </item>
                 <item row="3" column="1">
@@ -712,8 +656,86 @@ background: rgb(150, 150, 150);
                   </property>
                  </widget>
                 </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="globalOpacity_label">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>90</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Global Opacity</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QComboBox" name="onionType_cBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>80</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="currentIndex">
+                   <number>1</number>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Shaded</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Shape</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Outline</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="3" column="0">
+                 <widget class="QLabel" name="relative_tint_strength_label">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>90</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Tint Strength</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
                 <item row="4" column="1">
-                 <widget class="QComboBox" name="comboBox">
+                 <widget class="QComboBox" name="tint_type_cBox">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -733,14 +755,30 @@ background: rgb(150, 150, 150);
                   </item>
                   <item>
                    <property name="text">
-                    <string>Gradient</string>
+                    <string>Relative Random</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string>Random</string>
+                    <string>Static Random</string>
                    </property>
                   </item>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_5">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Draw Behind</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
                  </widget>
                 </item>
                 <item row="0" column="0">
@@ -775,89 +813,65 @@ background: rgb(150, 150, 150);
                   </property>
                  </widget>
                 </item>
-                <item row="1" column="0">
-                 <widget class="QLabel" name="label_5">
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Draw Behind</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="0">
-                 <widget class="QLabel" name="relative_tint_strength_label">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>90</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>Tint Strength</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                  </property>
-                 </widget>
-                </item>
                 <item row="5" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout_2">
-                  <item>
-                   <widget class="QPushButton" name="relative_pastTint_btn">
-                    <property name="styleSheet">
-                     <string notr="true">background-color:rgb(255, 26, 75)</string>
-                    </property>
-                    <property name="text">
-                     <string>Past</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="relative_futureTint_btn">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(20, 255, 114)</string>
-                    </property>
-                    <property name="text">
-                     <string>Future</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="absolute_tint_btn">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                    <property name="styleSheet">
-                     <string notr="true">background:rgb(200, 200, 50)</string>
-                    </property>
-                    <property name="text">
-                     <string>Absolute</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
+                 <widget class="QWidget" name="constant_col_widget" native="true">
+                  <layout class="QHBoxLayout" name="horizontalLayout_2">
+                   <property name="leftMargin">
+                    <number>1</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>1</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>1</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>1</number>
+                   </property>
+                   <item>
+                    <widget class="QPushButton" name="relative_pastTint_btn">
+                     <property name="styleSheet">
+                      <string notr="true">background-color:rgb(255, 26, 75)</string>
+                     </property>
+                     <property name="text">
+                      <string>Past</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="relative_futureTint_btn">
+                     <property name="styleSheet">
+                      <string notr="true">background-color: rgb(20, 255, 114)</string>
+                     </property>
+                     <property name="text">
+                      <string>Future</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="absolute_tint_btn">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>0</height>
+                      </size>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">background:rgb(200, 200, 50)</string>
+                     </property>
+                     <property name="text">
+                      <string>Absolute</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                </layout>
               </item>
@@ -910,7 +924,7 @@ background: rgb(150, 150, 150);
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>482</width>
+     <width>488</width>
      <height>21</height>
     </rect>
    </property>

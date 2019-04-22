@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\doris\Documents\GitHub\onionSkinRenderer\onionSkinRendererPreferences.ui'
+# Form implementation generated from reading ui file 'D:\Personal Work\2019\onionSkinRenderer\onionSkinRendererPreferences.ui'
 #
-# Created: Sat Jan 19 13:18:52 2019
+# Created: Sun Apr 21 22:39:53 2019
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_onionSkinRendererPreferences(object):
     def setupUi(self, onionSkinRendererPreferences):
         onionSkinRendererPreferences.setObjectName("onionSkinRendererPreferences")
-        onionSkinRendererPreferences.resize(278, 118)
+        onionSkinRendererPreferences.resize(279, 157)
         self.verticalLayout = QtWidgets.QVBoxLayout(onionSkinRendererPreferences)
         self.verticalLayout.setObjectName("verticalLayout")
         self.prefs_maxBuffer_layout = QtWidgets.QHBoxLayout()
@@ -51,6 +51,15 @@ class Ui_onionSkinRendererPreferences(object):
         self.outlineWidth_spinBox.setObjectName("outlineWidth_spinBox")
         self.prefs_outlineWidth.addWidget(self.outlineWidth_spinBox)
         self.verticalLayout.addLayout(self.prefs_outlineWidth)
+        self.prefs_tintSeed = QtWidgets.QHBoxLayout()
+        self.prefs_tintSeed.setObjectName("prefs_tintSeed")
+        self.tintSeed_label = QtWidgets.QLabel(onionSkinRendererPreferences)
+        self.tintSeed_label.setObjectName("tintSeed_label")
+        self.prefs_tintSeed.addWidget(self.tintSeed_label)
+        self.tintSeed_spinBox = QtWidgets.QSpinBox(onionSkinRendererPreferences)
+        self.tintSeed_spinBox.setObjectName("tintSeed_spinBox")
+        self.prefs_tintSeed.addWidget(self.tintSeed_spinBox)
+        self.verticalLayout.addLayout(self.prefs_tintSeed)
         self.prefs_dialogButtonBox = QtWidgets.QDialogButtonBox(onionSkinRendererPreferences)
         self.prefs_dialogButtonBox.setOrientation(QtCore.Qt.Horizontal)
         self.prefs_dialogButtonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
@@ -67,4 +76,5 @@ class Ui_onionSkinRendererPreferences(object):
         self.maxBuffer_label.setText(QtWidgets.QApplication.translate("onionSkinRendererPreferences", "Maximum Buffer Size", None, -1))
         self.relativeKeyCount_label.setText(QtWidgets.QApplication.translate("onionSkinRendererPreferences", "Relative Keys Count", None, -1))
         self.outlineWidth_label.setText(QtWidgets.QApplication.translate("onionSkinRendererPreferences", "Outline Width", None, -1))
+        self.tintSeed_label.setText(QtWidgets.QApplication.translate("onionSkinRendererPreferences", "Tint Seed", None, -1))
 

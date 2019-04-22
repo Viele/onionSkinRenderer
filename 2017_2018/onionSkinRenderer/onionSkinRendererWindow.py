@@ -15,9 +15,11 @@ import onionSkinRenderer.onionSkinRendererPreferences as onionPrefs
 
 
 '''
-2017 Version
+2017 and 2018 Version
 using pyside2
 '''
+
+kDebugAll = False
 
 
 # wrapper to get mayas main window
@@ -66,7 +68,6 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         # so i just call init myself.
         # It feels a bit hacky, but it works anyway
         onionCore.initializeOverride()
-
         # member variables
         self.mOnionObjectSet = set()
         self.mAbsoluteOnionSet = set()
@@ -82,27 +83,30 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
         self.createConnections()
 
-        self.setOnionType()
-
         # load settings from the settings file
         self.loadSettings()
 
     #
     def closeEvent(self, event):
         # when the UI is closed, deactivate the override
+        if kDebugAll: print 'close event start'
         self.saveSettings()
         onionCore.uninitializeOverride()
+        if kDebugAll: print 'close event end'
     
     # special event for the dockable feature
-    def dockCloseEventTriggered(self):
+    def dockCloseEventTriggered(self, event):
+        if kDebugAll: print 'dock close event start'
         try:
             self.saveSettings()
-        except:
-            pass
+        except Exception as e:
+            print e
         onionCore.uninitializeOverride()
+        if kDebugAll: print 'dock close event end'
 
     # code from https://gist.github.com/liorbenhorin/217bfb7e54c6f75b9b1b2b3d73a1a43a
     def deleteControl(self, control):
+        if kDebugAll: print 'delete Control'
         if pm.workspaceControl(control, q=True, exists=True):
             pm.workspaceControl(control, e=True, close=True)
             pm.deleteUI(control, control=True)
@@ -118,6 +122,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         self.onionType_cBox.currentTextChanged.connect(self.setOnionType)
         self.drawBehind_chkBx.stateChanged.connect(self.setDrawBehind)
 
+        self.tint_type_cBox.currentTextChanged.connect(self.setTintType)
         self.relative_futureTint_btn.clicked.connect(self.pickColor)
         self.relative_pastTint_btn.clicked.connect(self.pickColor)
         self.relative_tint_strength_slider.sliderMoved.connect(self.setTintStrength)
@@ -342,6 +347,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             values = prefUi.getValues()
             onionCore.viewRenderOverrideInstance.setMaxBuffer(values['maxBuffer'])
             onionCore.viewRenderOverrideInstance.setOutlineWidth(values['outlineWidth'])
+            onionCore.viewRenderOverrideInstance.setTintSeed(values['tintSeed'])
             self.mRelativeFrameAmount = values['relativeKeyCount']*2
             self.refreshRelativeFrame()
             self.saveSettings()
@@ -417,6 +423,17 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
         else:
             self.sender().setMaximumHeight(200000)
 
+    #
+    def setTintType(self):
+        tintType = self.tint_type_cBox.currentIndex()
+        if tintType == 0:
+            self.constant_col_widget.setMaximumHeight(16777215)
+            self.constant_col_widget.setEnabled(True)
+        else:
+            self.constant_col_widget.setMaximumHeight(0)    
+            self.constant_col_widget.setEnabled(False)
+        onionCore.viewRenderOverrideInstance.setTintType(tintType)
+
             
             
 
@@ -441,6 +458,8 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
             self.setOnionColor(self.relative_futureTint_btn, self.mPrefs.setdefault('rFutureTint',[0,0,125]))
             self.setOnionColor(self.relative_pastTint_btn, self.mPrefs.setdefault('rPastTint',[0,125,0]))
             self.setOnionColor(self.absolute_tint_btn, self.mPrefs.setdefault('aTint', [125,0,0]))
+            onionCore.viewRenderOverrideInstance.setTintSeed(self.mPrefs.setdefault('tintSeed', 0))
+            self.tint_type_cBox.setCurrentIndex(self.mPrefs.setdefault('tintType',0))
 
             self.onionType_cBox.setCurrentIndex(self.mPrefs.setdefault('onionType',1))
             self.drawBehind_chkBx.setChecked(self.mPrefs.setdefault('drawBehind', True))
@@ -456,12 +475,15 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
     
     # save values into a json file
     def saveSettings(self):
+        if kDebugAll: print 'start save'
         data = {}
         data['autoClearBuffer'] = self.settings_autoClearBuffer.isChecked()
         data['displayKeyframes'] = self.relative_keyframes_chkbx.isChecked()
         data['rFutureTint'] = self.extractRGBFromStylesheet(self.relative_futureTint_btn.styleSheet())
         data['rPastTint'] = self.extractRGBFromStylesheet(self.relative_pastTint_btn.styleSheet())
         data['aTint'] = self.extractRGBFromStylesheet(self.absolute_tint_btn.styleSheet())
+        data['tintSeed'] = onionCore.viewRenderOverrideInstance.getTintSeed()
+        data['tintType'] = self.tint_type_cBox.currentIndex()
         data['relativeFrameAmount'] = self.mRelativeFrameAmount
         data['relativeStep'] = self.relative_step_spinBox.value()
         data['maxBufferSize'] = onionCore.viewRenderOverrideInstance.getMaxBuffer()
@@ -471,6 +493,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
 
         with open(os.path.join(self.mToolPath,'settings.txt'), 'w') as outfile:  
             json.dump(data, outfile)
+        if kDebugAll: print 'end save'
         
     # 
     def extractRGBFromStylesheet(self, s):
@@ -525,10 +548,12 @@ class OnionPreferences(QtWidgets.QDialog, onionPrefs.Ui_onionSkinRendererPrefere
         self.relativeKeyCount_spinBox.setValue(parent.mRelativeFrameAmount/2)
         self.maxBuffer_spinBox.setValue(onionCore.viewRenderOverrideInstance.getMaxBuffer())
         self.outlineWidth_spinBox.setValue(onionCore.viewRenderOverrideInstance.getOutlineWidth())
+        self.tintSeed_spinBox.setValue(onionCore.viewRenderOverrideInstance.getTintSeed())
 
     def getValues(self):
         values = {}
         values['maxBuffer'] = self.maxBuffer_spinBox.value()
         values['relativeKeyCount'] = self.relativeKeyCount_spinBox.value()
         values['outlineWidth'] = self.outlineWidth_spinBox.value()
+        values['tintSeed'] = self.tintSeed_spinBox.value()
         return values

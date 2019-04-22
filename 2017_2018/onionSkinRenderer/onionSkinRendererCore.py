@@ -7,6 +7,7 @@ import os
 import inspect
 import traceback
 import collections
+import random
 
 """
 This code is a render override for displaying onion skin overlays in the 3D viewport,
@@ -137,6 +138,9 @@ class viewRenderOverride(omr.MRenderOverride):
         self.mOnionType = 0
         self.mOutlineWidth = 3
         self.mDrawBehind = 1
+        self.mTintType = 0
+        # seed value set by user to get different random colors for tints
+        self.mTintSeed = 0
 
         # If this is True, we will show onions on the next keyticks
         # e.g. if mRelativeOnions has 1 and 3 in it, it will draw
@@ -265,22 +269,43 @@ class viewRenderOverride(omr.MRenderOverride):
                 blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[targetFrame])
                 blendPass.setStencilTarget(self.mOnionBuffer[self.mCurrentFrame])
 
-                # future tint
-                if targetFrame > self.mCurrentFrame:
+                # Constant Color
+                if self.mTintType == 0:
+                    # future tint
+                    if targetFrame > self.mCurrentFrame:
+                        blendPass.setTint((
+                            self.mRelativeFutureTint[0]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[0]/255.0, self.mTintStrength),
+                            self.mRelativeFutureTint[1]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[1]/255.0, self.mTintStrength), 
+                            self.mRelativeFutureTint[2]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[2]/255.0, self.mTintStrength), 
+                            1.0))
+                    # past tint
+                    else:
+                        blendPass.setTint((
+                            self.mRelativePastTint[0]/255.0 / self.lerp(1.0, self.mRelativePastTint[0]/255.0, self.mTintStrength),
+                            self.mRelativePastTint[1]/255.0 / self.lerp(1.0, self.mRelativePastTint[1]/255.0, self.mTintStrength), 
+                            self.mRelativePastTint[2]/255.0 / self.lerp(1.0, self.mRelativePastTint[2]/255.0, self.mTintStrength),  
+                            1.0))
+                # Relative Random
+                elif self.mTintType == 1:
+                    random.seed(blendPass.mFrame + self.mTintSeed + 1)
                     blendPass.setTint((
-                        (self.mRelativeFutureTint[0]/255.0) / self.lerp(1.0, self.mRelativeFutureTint[0]/255.0, self.mTintStrength),
-                        self.mRelativeFutureTint[1]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[1]/255.0, self.mTintStrength), 
-                        self.mRelativeFutureTint[2]/255.0 / self.lerp(1.0, self.mRelativeFutureTint[2]/255.0, self.mTintStrength), 
-                        1.0))
-                # past tint
+                        random.randrange(0,100)/100.0,
+                        random.randrange(0,100)/100.0,
+                        random.randrange(0,100)/100.0,
+                        1.0
+                    ))
+                # Static Random
                 else:
+                    # using the frame as a random seed,
+                    # so each frame always has a static color
+                    random.seed(targetFrame + self.mTintSeed)
                     blendPass.setTint((
-                        self.mRelativePastTint[0]/255.0 / self.lerp(1.0, self.mRelativePastTint[0]/255.0, self.mTintStrength),
-                        self.mRelativePastTint[1]/255.0 / self.lerp(1.0, self.mRelativePastTint[1]/255.0, self.mTintStrength), 
-                        self.mRelativePastTint[2]/255.0 / self.lerp(1.0, self.mRelativePastTint[2]/255.0, self.mTintStrength),  
-                        1.0))
+                        random.randrange(0,100)/100.0,
+                        random.randrange(0,100)/100.0,
+                        random.randrange(0,100)/100.0,
+                        1.0
+                    ))
             else:
-                #pass
                 blendPass.setActive(False)
 
         # setting targets to absolute blendPasses
@@ -291,11 +316,21 @@ class viewRenderOverride(omr.MRenderOverride):
                 blendPass.setActive(True)
                 blendPass.setInputTargets(self.mStandardTarget, self.mOnionBuffer[blendPass.mFrame])
                 blendPass.setStencilTarget(self.mOnionBuffer[self.mCurrentFrame])
-                blendPass.setTint((
-                    self.mAbsoluteTint[0]/255.0 / self.lerp(1.0, self.mAbsoluteTint[0]/255.0, self.mTintStrength),
-                    self.mAbsoluteTint[1]/255.0 / self.lerp(1.0, self.mAbsoluteTint[1]/255.0, self.mTintStrength),
-                    self.mAbsoluteTint[2]/255.0 / self.lerp(1.0, self.mAbsoluteTint[2]/255.0, self.mTintStrength)
-                ))
+                if self.mTintType == 0:
+                    blendPass.setTint((
+                        self.mAbsoluteTint[0]/255.0 / self.lerp(1.0, self.mAbsoluteTint[0]/255.0, self.mTintStrength),
+                        self.mAbsoluteTint[1]/255.0 / self.lerp(1.0, self.mAbsoluteTint[1]/255.0, self.mTintStrength),
+                        self.mAbsoluteTint[2]/255.0 / self.lerp(1.0, self.mAbsoluteTint[2]/255.0, self.mTintStrength)
+                    ))
+                else:
+                    random.seed(blendPass.mFrame + self.mTintSeed)
+                    blendPass.setTint((
+                        random.randrange(0,100)/100.0,
+                        random.randrange(0,100)/100.0,
+                        random.randrange(0,100)/100.0,
+                        1.0
+                    ))
+
             else:
                 blendPass.setActive(False)
 
@@ -462,6 +497,10 @@ class viewRenderOverride(omr.MRenderOverride):
     def isPlugInteresting(self, plug, targetPlug):
         mfn_dep = om.MFnDependencyNode(plug.node())
         return plug == mfn_dep.findPlug(targetPlug, True)
+
+    #
+    def refresh(self):
+        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
         
 
@@ -630,7 +669,7 @@ class viewRenderOverride(omr.MRenderOverride):
     # 
     def setOutlineWidth(self, width):
         self.mOutlineWidth = width
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+        self.refresh()
 
     # 
     def getOutlineWidth(self):
@@ -639,11 +678,25 @@ class viewRenderOverride(omr.MRenderOverride):
     #
     def setDrawBehind(self, value):
         self.mDrawBehind = int(value)
-        omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
+        self.refresh()
 
     #
     def getDrawBehind(self):
         return self.mDrawBehind
+
+    #
+    def setTintType(self, tintType):
+        self.mTintType = tintType
+        self.refresh()
+
+    #
+    def setTintSeed(self, seed):
+        self.mTintSeed = seed
+        self.refresh()
+
+    #
+    def getTintSeed(self):
+        return self.mTintSeed
 
     
 

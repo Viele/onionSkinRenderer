@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>278</width>
-    <height>118</height>
+    <width>279</width>
+    <height>157</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -83,6 +83,20 @@
         <number>3</number>
        </property>
       </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="prefs_tintSeed">
+     <item>
+      <widget class="QLabel" name="tintSeed_label">
+       <property name="text">
+        <string>Tint Seed</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="tintSeed_spinBox"/>
      </item>
     </layout>
    </item>
