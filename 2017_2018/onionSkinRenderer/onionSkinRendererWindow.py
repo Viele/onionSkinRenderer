@@ -176,13 +176,15 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
                 frame = index-self.mRelativeFrameAmount/2
                 listWidget.frame_number.setText(str(frame))
                 listWidget.frame_opacity_slider.setValue(75/abs(index-self.mRelativeFrameAmount/2))
-                listWidget.frame_visibility_btn.clicked.connect(self.toggleRelativeFrame)
+                listWidget.frame_visibility_btn.toggled.connect(self.toggleRelativeFrame)
                 if frame in activeFrames: 
                     listWidget.frame_visibility_btn.setChecked(True)
                     activeFrames.remove(frame)
                 listWidget.frame_opacity_slider.sliderMoved.connect(self.setRelativeOpacity)
                 self.relative_frame_layout.addWidget(listWidget)
-        
+
+        # remove all remaining frames from onion skin renderer
+        # since their visibility is no longer accesible from ui
         for frame in activeFrames:
             onionCore.viewRenderOverrideInstance.removeRelativeOnion(frame)
 
@@ -205,7 +207,7 @@ class OnionSkinRendererWindow(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, o
                 listWidget.addRemoveButton()
                 listWidget.frame_visibility_btn.setChecked(onionCore.viewRenderOverrideInstance.absoluteOnionExists(int(frame)))
                 listWidget.frame_remove_btn.clicked.connect(lambda b_frame = frame: self.removeAbsoluteFrame(b_frame))
-                listWidget.frame_visibility_btn.clicked.connect(self.toggleAbsoluteFrame)
+                listWidget.frame_visibility_btn.toggled.connect(self.toggleAbsoluteFrame)
                 listWidget.frame_opacity_slider.sliderMoved.connect(self.setAbsoluteOpacity)
                 listItem = QtWidgets.QListWidgetItem()
                 listItem.setData(QtCore.Qt.UserRole, int(frame))
