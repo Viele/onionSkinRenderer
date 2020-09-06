@@ -52,7 +52,7 @@ def maya_useNewAPI():
 
 
 # globally available instance of renderer
-G_osrInstance = None
+OSR_INSTANCE = None
 
 
 
@@ -63,7 +63,7 @@ This manually registers the osr as a plugin in maya.
 Several reasons to do this
 - some studios don't allow users to add stuff to their C drive
 - convenience, it is a lot easier for users to copy a folder to their scripts directory and be done
-- as a plugin I can't get to the G_osrInstance (sth to do with python namespaces i guess)
+- as a plugin I can't get to the OSR_INSTANCE (sth to do with python namespaces i guess)
 
 It feels a bit hacky, but it works anyway
 
@@ -76,10 +76,10 @@ def initializeOverride():
     try:
         # register the path to the plugin
         omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
-        global G_osrInstance
-        G_osrInstance = viewRenderOverride("onionSkinRenderer")
-        G_osrInstance.createCallbacks()
-        omr.MRenderer.registerOverride(G_osrInstance)
+        global OSR_INSTANCE
+        OSR_INSTANCE = ViewRenderOverride("onionSkinRenderer")
+        OSR_INSTANCE.createCallbacks()
+        omr.MRenderer.registerOverride(OSR_INSTANCE)
     except:
         traceback.print_exc()
         raise Exception("Failed to register plugin %s" %PLUGIN_NAME)
@@ -89,11 +89,11 @@ def initializeOverride():
 def uninitializeOverride():
     if DEBUG_ALL: print 'unitiliazide Renderer'
     try:
-        global G_osrInstance
-        if G_osrInstance is not None:
-            omr.MRenderer.deregisterOverride(G_osrInstance)
-            G_osrInstance.deleteCallbacks()
-            G_osrInstance = None
+        global OSR_INSTANCE
+        if OSR_INSTANCE is not None:
+            omr.MRenderer.deregisterOverride(OSR_INSTANCE)
+            OSR_INSTANCE.deleteCallbacks()
+            OSR_INSTANCE = None
     except:
         traceback.print_exc()
         raise Exception("Failed to unregister plugin %s" % PLUGIN_NAME)
@@ -109,14 +109,14 @@ The main thing it does is handling inputs from the controller and rendering the 
 Think of passes as photoshop layers getting merged and then sent to the screen.
 The class also holds all the 
 """
-class viewRenderOverride(omr.MRenderOverride):
+class ViewRenderOverride(omr.MRenderOverride):
     # constructor
     def __init__(self, name):
         if DEBUG_ALL or DEBUG_RENDER_OVERIDE:
-            print ("Initializing viewRenderOverride")
+            print ("Initializing ViewRenderOverride")
 
         #omr.MRenderOverride.__init__(self, name)
-        super(viewRenderOverride, self).__init__(name)
+        super(ViewRenderOverride, self).__init__(name)
 
         # name in the renderer dropdown menu
         self.UIName = PLUGIN_NAME
@@ -226,7 +226,7 @@ class viewRenderOverride(omr.MRenderOverride):
     # destructor
     def __del__(self):
         if DEBUG_ALL or DEBUG_RENDER_OVERIDE:
-            print ("Deleting viewRenderOverride")
+            print ("Deleting ViewRenderOverride")
         self.clearPass = None
         self.standardPass = None
         self.HUDPass = None
