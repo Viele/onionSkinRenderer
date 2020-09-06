@@ -1,7 +1,7 @@
 import maya.api.OpenMayaRender as omr
 
 """
-Turn around and hope M is happy with the result
+This displays the render in the viewport
 """
 class viewRenderPresentTarget(omr.MPresentTarget):
     def __init__(self, name):

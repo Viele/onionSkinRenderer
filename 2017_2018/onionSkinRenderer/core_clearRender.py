@@ -1,9 +1,7 @@
 import maya.api.OpenMayaRender as omr
 
 """
-When M requests a new display, you first have to clear your plate.
-This happens with this tool. The plate will have a the color that M
-defines.
+fill the render with a color
 """
 class viewRenderClearRender(omr.MClearOperation):
     def __init__(self, name):

@@ -1,11 +1,12 @@
 import maya.api.OpenMayaRender as omr
 
+DEBUG = False
+
 """
-M doesn't want to see only onions, but also the surrounding veggies.
-With this tool, you can combine displays so you can show them at
-the same time
+This class is responsible for blending onion skins on top of the viewport
+Here the targets are assigned to the shader
 """
-class viewRenderQuadRender(omr.MQuadRender):
+class OSQuadRender(omr.MQuadRender):
     kEffectNone = 0
     kSceneBlend = 1
     
@@ -21,13 +22,13 @@ class viewRenderQuadRender(omr.MQuadRender):
 
         self.shaderInstance = None
 
-        self.clearMask = clearMask
+        self.mClearMask = clearMask
 
         self.target = None
         self.inputTarget = [None, None]
         self.stencilTarget = None
 
-        self.shader = self.kEffectNone
+        self.shaderType = self.kEffectNone
 
         self.frame = frame
 
@@ -50,6 +51,7 @@ class viewRenderQuadRender(omr.MQuadRender):
         self.inputTarget = None
 
     def shader(self):
+        if DEBUG: print("getting quad render shader")
         if not self.active:
             return None
 
@@ -74,6 +76,7 @@ class viewRenderQuadRender(omr.MQuadRender):
         return self.shaderInstance
 
     def targetOverrideList(self):
+        if DEBUG: print("returning override list")
         if self.target is not None:
             return [self.target]
         return None
@@ -82,11 +85,12 @@ class viewRenderQuadRender(omr.MQuadRender):
         self.target = target
 
     def clearOperation(self):
-        self.mClearOperation.setMask(self.clearMask)
+        if DEBUG: print("starting clear operation")
+        self.mClearOperation.setMask(self.mClearMask)
         return self.mClearOperation
 
     def setShader(self, shader):
-        self.shader = shader
+        self.shaderType = shader
 
     def setInputTargets(self, target1, target2):
         self.inputTarget[0] = target1

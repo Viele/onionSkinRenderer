@@ -34,10 +34,7 @@ Constants & Debug Variables
 When something goes wrong, turning these on will
 dump info in the script editor
 """
-DEBUG_ALL = False
-DEBUG_RENDER_OVERIDE = False
-DEBUG_SCENE_RENDER = False
-DEBUG_QUAD_RENDER = False
+DEBUG = True
 PLUGIN_NAME = "Onion Skin Renderer"
 
 
@@ -72,7 +69,7 @@ doesn't finish the unitializeOverride() function, you need to restart maya for i
 '''
 
 def initializeOverride():
-    if DEBUG_ALL: print 'initialize Renderer'
+    if DEBUG: print 'initialize Renderer'
     try:
         # register the path to the plugin
         omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
@@ -87,7 +84,7 @@ def initializeOverride():
 
 # un-init
 def uninitializeOverride():
-    if DEBUG_ALL: print 'unitiliazide Renderer'
+    if DEBUG: print 'unitiliazide Renderer'
     try:
         global OSR_INSTANCE
         if OSR_INSTANCE is not None:
@@ -107,12 +104,14 @@ def uninitializeOverride():
 This is the main class for the render overide.
 The main thing it does is handling inputs from the controller and rendering the passes.
 Think of passes as photoshop layers getting merged and then sent to the screen.
-The class also holds all the 
+The class holds all the buffered onion skins.
+The onion skins are rendered on top of the normal viewport, one after the other.
+So there is a render pass for each displayed onion skin
 """
 class ViewRenderOverride(omr.MRenderOverride):
     # constructor
     def __init__(self, name):
-        if DEBUG_ALL or DEBUG_RENDER_OVERIDE:
+        if DEBUG:
             print ("Initializing ViewRenderOverride")
 
         #omr.MRenderOverride.__init__(self, name)
@@ -128,7 +127,7 @@ class ViewRenderOverride(omr.MRenderOverride):
         # label for the onion
         # current frame, used for setting the onion target key
         self.currentFrame = 0
-        # holds all avaialable onions
+        # holds all avaialable onion skin renders
         # the key to the target is its frame number
         self.onionSkinBuffer = {}
         # save the order in which onions where added
@@ -137,12 +136,15 @@ class ViewRenderOverride(omr.MRenderOverride):
         self.maxOnionSkinBufferSize = 200
         # manages the display of the onion skin overlay, false means no overlay
         self.enableBlend = False
-        # save the relative Onions
-        self.relativeOnions = {}
+        # store blend passes for relative onion skin display
+        # a pass is stored when the user activates it in the ui with the "v" icon
+        self.relativeBlendPasses = {}
         # only display every nth relative onion
         self.relativeStep = 1
-        # save the absolute onions
-        self.absoluteOnions = {}
+        # store blend passes for absolute onion skin display
+        # a blend pass is stored with the key being its frame
+        # a blend pass is added for each absolute onion skin display the user registers
+        self.absoluteBlendPasses = {}
         # buffer onion objects to make adding sets possible
         self.onionObjectBuffer = om.MSelectionList()
         # save all the objects to display in a list
@@ -167,8 +169,8 @@ class ViewRenderOverride(omr.MRenderOverride):
         # seed value set by user to get different random colors for tints
         self.tintSeed = 0
 
-        # If this is True, we will show onions on the next keyticks
-        # e.g. if relativeOnions has 1 and 3 in it, it will draw
+        # If this is True, we will show onion skins on the next keyticks
+        # e.g. if relativeBlendPasses has 1 and 3 in it, it will draw
         # the next and the 3rd frame with a tick on the timeslider
         self.relativeKeyDisplay = True
         # 
@@ -183,19 +185,20 @@ class ViewRenderOverride(omr.MRenderOverride):
         self.clearPass.setOverridesColors(False)
         self.renderOperations.append(self.clearPass)
 
-        self.standardPass = sceneRender.viewRenderSceneRender(
+        self.standardPass = sceneRender.OSSceneRender(
             "standardPass",
             omr.MClearOperation.kClearNone
         )
         self.renderOperations.append(self.standardPass)
 
-        self.onionPass = sceneRender.viewRenderSceneRender(
-            "onionPass",
+        # the onion skin pass buffers an image of the specified object on the current frame
+        self.onionSkinPass = sceneRender.OSSceneRender(
+            "onionSkinPass",
             omr.MClearOperation.kClearAll
         )
-        self.onionPass.setSceneFilter(omr.MSceneRender.kRenderShadedItems)
-        self.onionPass.setDrawSelectionFilter(True)
-        self.renderOperations.append(self.onionPass)
+        self.onionSkinPass.setSceneFilter(omr.MSceneRender.kRenderShadedItems)
+        self.onionSkinPass.setDrawSelectionFilter(True)
+        self.renderOperations.append(self.onionSkinPass)
 
         self.HUDPass = hudRender.viewRenderHUDRender()
         self.renderOperations.append(self.HUDPass)
@@ -204,15 +207,19 @@ class ViewRenderOverride(omr.MRenderOverride):
         self.renderOperations.append(self.presentTarget)
         
         # TARGETS
-        # standard target is what will be displayed. all but onion render to this target
+        # standard target is what will be displayed. all but onion skins render to this target
         self.standardTargetDescr = omr.MRenderTargetDescription()
         self.standardTargetDescr.setName("standardTarget")
         self.standardTargetDescr.setRasterFormat(omr.MRenderer.kR8G8B8A8_UNORM)
 
-        # onion target will be blended over standard target
-        self.onionTargetDescr = omr.MRenderTargetDescription()
-        self.onionTargetDescr.setName("onionTarget")
-        self.onionTargetDescr.setRasterFormat(omr.MRenderer.kR8G8B8A8_UNORM)
+        self.depthTargetDescr = omr.MRenderTargetDescription()
+        self.depthTargetDescr.setName("depthTarget")
+        self.depthTargetDescr.setRasterFormat(omr.MRenderer.kD24S8)
+
+        # with this onion skins will be blended over standard target
+        self.blendTargetDescr = omr.MRenderTargetDescription()
+        self.blendTargetDescr.setName("onionTarget")
+        self.blendTargetDescr.setRasterFormat(omr.MRenderer.kR8G8B8A8_UNORM)
 
         # Set the targets that don't change
         self.targetMgr = omr.MRenderer.getRenderTargetManager()
@@ -225,7 +232,7 @@ class ViewRenderOverride(omr.MRenderOverride):
 
     # destructor
     def __del__(self):
-        if DEBUG_ALL or DEBUG_RENDER_OVERIDE:
+        if DEBUG:
             print ("Deleting ViewRenderOverride")
         self.clearPass = None
         self.standardPass = None
@@ -234,7 +241,7 @@ class ViewRenderOverride(omr.MRenderOverride):
         self.renderOperations = None
         # delete the targets, otherwise the target manager might
         # return None when asked for a target that already exists
-        self.rotOnions()
+        self.clearOnionSkinBuffer()
         self.targetMgr.releaseRenderTarget(self.standardTarget)
         self.targetMgr = None
         self.onionObjectList = None
@@ -251,17 +258,17 @@ class ViewRenderOverride(omr.MRenderOverride):
 
 
     # this is basically the render function
-    # it is called every refresh of the screen and handles the passes
+    # it is called by maya every refresh of the screen and handles the passes
     def setup(self, destination):
-        if DEBUG_ALL or DEBUG_RENDER_OVERIDE:
+        if DEBUG:
             print ("Starting setup")
         # set the size of the target, so when the viewport scales,
         # the targets remain a 1:1 pixel size
         targetSize = omr.MRenderer.outputTargetSize()
         self.standardTargetDescr.setWidth(targetSize[0])
         self.standardTargetDescr.setHeight(targetSize[1])
-        self.onionTargetDescr.setWidth(targetSize[0])
-        self.onionTargetDescr.setHeight(targetSize[1])
+        self.blendTargetDescr.setWidth(targetSize[0])
+        self.blendTargetDescr.setHeight(targetSize[1])
 
         # update the standard target to the just set size
         self.standardTarget.updateDescription(self.standardTargetDescr)
@@ -269,28 +276,28 @@ class ViewRenderOverride(omr.MRenderOverride):
         # if the name already exists
         self.currentFrame = oma.MAnimControl.currentTime().value
         onionTargetName = "onionTarget%s" % self.currentFrame
-        self.onionTargetDescr.setName(onionTargetName)
+        self.blendTargetDescr.setName(onionTargetName)
         
         # if the onion is not buffered do so, otherwise update the buffered
         if self.currentFrame not in self.onionSkinBuffer:
-            self.onionSkinBuffer[self.currentFrame] = self.targetMgr.acquireRenderTarget(self.onionTargetDescr)
+            self.onionSkinBuffer[self.currentFrame] = self.targetMgr.acquireRenderTarget(self.blendTargetDescr)
             self.onionSkinBufferQueue.append(self.currentFrame)
-            if len(self.onionSkinBufferQueue) > self.maxOnionSkinBufferSize: self.rotOldestOnion()
+            if len(self.onionSkinBufferQueue) > self.maxOnionSkinBufferSize: self.deleteOldestOnionSkinBuffer()
         else:
-            self.onionSkinBuffer.get(self.currentFrame).updateDescription(self.onionTargetDescr)
-        # then set the render target to the appropriate onion
-        self.onionPass.setRenderTarget(self.onionSkinBuffer.get(self.currentFrame))
-        # set the filter list to the onion renderer
-        self.onionPass.setObjectFilterList(self.onionObjectList)
+            self.onionSkinBuffer.get(self.currentFrame).updateDescription(self.blendTargetDescr)
+        # then set the render target to the appropriate os
+        self.onionSkinPass.setRenderTarget(self.onionSkinBuffer.get(self.currentFrame))
+        # set the filter list to the osr
+        self.onionSkinPass.setObjectFilterList(self.onionObjectList)
 
+        if DEBUG: print("setting render targets for relative frame targets")
         # setting targets to relative blend passes
-        for blend in self.relativeOnions:
-            blendPass = self.relativeOnions[blend]
-            targetFrame = 1
+        for blendPass in self.relativeBlendPasses.values():
+            targetFrame = 0
             if self.relativeKeyDisplay:
-                targetFrame = blendPass.mFrame
+                targetFrame = blendPass.frame
             else:
-                targetFrame = blendPass.mFrame * self.relativeStep + self.currentFrame
+                targetFrame = blendPass.frame * self.relativeStep + self.currentFrame
             
 
             if targetFrame in self.onionSkinBuffer:
@@ -317,7 +324,7 @@ class ViewRenderOverride(omr.MRenderOverride):
                             1.0))
                 # Relative Random
                 elif self.tintType == 1:
-                    random.seed(blendPass.mFrame + self.tintSeed + 1)
+                    random.seed(blendPass.frame + self.tintSeed + 1)
                     blendPass.setTint((
                         random.randrange(0,100)/100.0,
                         random.randrange(0,100)/100.0,
@@ -338,13 +345,12 @@ class ViewRenderOverride(omr.MRenderOverride):
             else:
                 blendPass.setActive(False)
 
-        # setting targets to absolute blendPasses
-        for blend in self.absoluteOnions:
-            blendPass = self.absoluteOnions[blend]
-            
-            if blendPass.mFrame in self.onionSkinBuffer:
+        if DEBUG: print("setting render targets for absolute frame targets")
+        # setting targets to absolute blend passes
+        for blendPass in self.absoluteBlendPasses.values():
+            if blendPass.frame in self.onionSkinBuffer:
                 blendPass.setActive(True)
-                blendPass.setInputTargets(self.standardTarget, self.onionSkinBuffer[blendPass.mFrame])
+                blendPass.setInputTargets(self.standardTarget, self.onionSkinBuffer[blendPass.frame])
                 blendPass.setStencilTarget(self.onionSkinBuffer[self.currentFrame])
                 if self.tintType == 0:
                     blendPass.setTint((
@@ -353,7 +359,7 @@ class ViewRenderOverride(omr.MRenderOverride):
                         self.absoluteTint[2]/255.0 / self.lerp(1.0, self.absoluteTint[2]/255.0, self.tintStrength)
                     ))
                 else:
-                    random.seed(blendPass.mFrame + self.tintSeed)
+                    random.seed(blendPass.frame + self.tintSeed)
                     blendPass.setTint((
                         random.randrange(0,100)/100.0,
                         random.randrange(0,100)/100.0,
@@ -364,21 +370,26 @@ class ViewRenderOverride(omr.MRenderOverride):
             else:
                 blendPass.setActive(False)
 
+        if DEBUG: print("finish setup")
+
             
 
     # called by maya to start iterating through passes
     def startOperationIterator(self):
+        if DEBUG: print("starting Render Operation")
         self.operation = 0
         return True
 
     # called by maya to define which pass to calculate
     # the order specified here defines the draw order
     def renderOperation(self):
+        if DEBUG: print("executing render operation: %s"%(self.renderOperations[self.operation]))
         return self.renderOperations[self.operation]
 
     # advance to the next pass or return false if
     # all are calculated
     def nextRenderOperation(self):
+        if DEBUG: print("advancing render operation")
         self.operation = self.operation + 1
         return self.operation < len(self.renderOperations)
 
@@ -391,20 +402,20 @@ class ViewRenderOverride(omr.MRenderOverride):
     # UTILITY FUNCTIONS
 
     # reducing code duplicates by merging both add onion functions
-    def addOnion(self, frame, opacity, targetDict):
+    def addTargetFrame(self, frame, opacity, targetDict):
         if frame not in targetDict:
-            targetDict[frame] = viewRenderQuadRender(
+            targetDict[frame] = quadRender.OSQuadRender(
                 'blendPass%s' % frame,
                 omr.MClearOperation.kClearNone,
                 int(frame)
             )
             targetDict[frame].setOpacity(opacity/100.0)
-            targetDict[frame].setShader(viewRenderQuadRender.kSceneBlend)
+            targetDict[frame].setShader(quadRender.OSQuadRender.kSceneBlend)
             targetDict[frame].setRenderTarget(self.standardTarget)
 
             # insert operation after onion pass
             self.renderOperations.insert(
-                self.renderOperations.index(self.onionPass) + 1,
+                self.renderOperations.index(self.onionSkinPass) + 1,
                 targetDict[frame]
             )
 
@@ -412,7 +423,7 @@ class ViewRenderOverride(omr.MRenderOverride):
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     # called by absolute and relative remove
-    def removeOnion(self, frame, targetDict):
+    def removeTargetFrame(self, frame, targetDict):
         if frame in targetDict:
             renderPass = targetDict.pop(frame, None)
             self.renderOperations.remove(renderPass)
@@ -423,7 +434,7 @@ class ViewRenderOverride(omr.MRenderOverride):
         return self.UIName
     
     #
-    def rotOnions(self, refresh = True):
+    def clearOnionSkinBuffer(self, refresh = True):
         if self.targetMgr is not None:
             for target in self.onionSkinBuffer:
                 self.targetMgr.releaseRenderTarget(self.onionSkinBuffer.get(target))
@@ -432,7 +443,7 @@ class ViewRenderOverride(omr.MRenderOverride):
         if refresh: omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     # 
-    def rotOldestOnion(self):
+    def deleteOldestOnionSkinBuffer(self):
         frame = self.onionSkinBufferQueue.popleft()
         if self.targetMgr is not None:
             self.targetMgr.releaseRenderTarget(self.onionSkinBuffer[frame])
@@ -477,8 +488,8 @@ class ViewRenderOverride(omr.MRenderOverride):
 
         pastKeys = list(reversed(pastKeys))
 
-        for frameIndex in self.relativeOnions:
-            blendPass = self.relativeOnions[frameIndex]
+        for frameIndex in self.relativeBlendPasses:
+            blendPass = self.relativeBlendPasses[frameIndex]
             if frameIndex < 0:
                 # past
                 if pastKeys and len(pastKeys) >= frameIndex*-1:
@@ -521,7 +532,7 @@ class ViewRenderOverride(omr.MRenderOverride):
             and self.autoClearBuffer
             and (self.isPlugInteresting(plug1, 'translate') 
             or self.isPlugInteresting(plug1, 'rotate'))):
-            self.rotOnions(False)
+            self.clearOnionSkinBuffer(False)
 
     # checks if the plug matches the given string
     def isPlugInteresting(self, plug, targetPlug):
@@ -542,46 +553,46 @@ class ViewRenderOverride(omr.MRenderOverride):
     # INTERFACE FUNCTIONS
 
     # add a frame to display relative to current time slider position
-    def addRelativeOnion(self, frame, opacity):
-        self.addOnion(int(frame), opacity, self.relativeOnions)
+    def addRelativeTargetFrame(self, frame, opacity):
+        self.addTargetFrame(int(frame), opacity, self.relativeBlendPasses)
 
     #
-    def removeRelativeOnion(self, frame):
-        self.removeOnion(int(frame), self.relativeOnions)
+    def removeRelativeTargetFrame(self, frame):
+        self.removeTargetFrame(int(frame), self.relativeBlendPasses)
 
-    def setRelativeKeyDisplay(self, value):
+    def setRelativeDisplayMode(self, value):
         self.relativeKeyDisplay = value
         if value:
             self.setRelativeFrames(1)
         else:
-            for frameIndex in self.relativeOnions:
-                blendPass = self.relativeOnions[frameIndex]
+            for frameIndex in self.relativeBlendPasses:
+                blendPass = self.relativeBlendPasses[frameIndex]
                 blendPass.setFrame(frameIndex)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
     
     # add a frame that is always displayed on the current position
-    def addAbsoluteOnion(self, frame, opacity):
-        self.addOnion(int(frame), opacity, self.absoluteOnions)
+    def addAbsoluteTargetFrame(self, frame, opacity):
+        self.addTargetFrame(int(frame), opacity, self.absoluteBlendPasses)
     
     #
-    def removeAbsoluteOnion(self, frame):
-        self.removeOnion(int(frame), self.absoluteOnions)
+    def removeAbsoluteTargetFrame(self, frame):
+        self.removeTargetFrame(int(frame), self.absoluteBlendPasses)
 
     #
-    def clearAbsoluteOnions(self):
-        for onion in self.absoluteOnions:
-            self.renderOperations.remove(self.absoluteOnions[onion])
-        self.absoluteOnions.clear()
+    def clearAbsoluteTargetFrames(self):
+        for onion in self.absoluteBlendPasses:
+            self.renderOperations.remove(self.absoluteBlendPasses[onion])
+        self.absoluteBlendPasses.clear()
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     #
-    def absoluteOnionExists(self, frame):
-        return frame in self.absoluteOnions
+    def absoluteTargetFrameExists(self, frame):
+        return frame in self.absoluteBlendPasses
 
     #
-    def getAbsoluteOpacity(self, frame):
-        if frame in self.absoluteOnions:
-            return self.absoluteOnions[frame].mOpacity * 100
+    def getOpacityOfAbsoluteFrame(self, frame):
+        if frame in self.absoluteBlendPasses:
+            return self.absoluteBlendPasses[frame].opacity * 100
         
         return 50
 
@@ -604,8 +615,8 @@ class ViewRenderOverride(omr.MRenderOverride):
 
     #
     def setRelativeOpacity(self, frame, opacity):
-        if int(frame) in self.relativeOnions:
-            self.relativeOnions[int(frame)].setOpacity(opacity/100.0)
+        if int(frame) in self.relativeBlendPasses:
+            self.relativeBlendPasses[int(frame)].setOpacity(opacity/100.0)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     def setGlobalOpacity(self, opacity):
@@ -614,40 +625,40 @@ class ViewRenderOverride(omr.MRenderOverride):
 
     #
     def setAbsoluteOpacity(self, frame, opacity):
-        if frame in self.absoluteOnions:
-            self.absoluteOnions[frame].setOpacity(opacity/100.0)
+        if frame in self.absoluteBlendPasses:
+            self.absoluteBlendPasses[frame].setOpacity(opacity/100.0)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     # adding objects to the selectionList
     # works recursively if a set is found
-    def addSelectedOnion(self):
+    def addSelectedTargetObject(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
             self.onionObjectBuffer.merge(selList)
         self.onionObjectList = self.flattenSelectionList(self.onionObjectBuffer)
-        self.rotOnions()
+        self.clearOnionSkinBuffer()
 
     #
-    def removeSelectedOnion(self):
+    def removeSelectedTargetObject(self):
         selList = om.MGlobal.getActiveSelectionList()
         if not selList.isEmpty():
             self.onionObjectBuffer.merge(selList, om.MSelectionList.kRemoveFromList)
         self.onionObjectList = self.flattenSelectionList(self.onionObjectBuffer)
-        self.rotOnions()
+        self.clearOnionSkinBuffer()
 
     #
-    def removeOnionObject(self, dagPath):
+    def removeTargetObject(self, dagPath):
         tmpList = om.MSelectionList()
         tmpList.add(dagPath)
         self.onionObjectBuffer.merge(tmpList, om.MSelectionList.kRemoveFromList)
         self.onionObjectList = self.flattenSelectionList(self.onionObjectBuffer)
-        self.rotOnions()
+        self.clearOnionSkinBuffer()
 
     #
-    def clearOnionObjects(self):
+    def clearTargetObjects(self):
         self.onionObjectList = om.MSelectionList()
         self.onionObjectBuffer = om.MSelectionList()
-        self.rotOnions()
+        self.clearOnionSkinBuffer()
 
     # adding callbacks to the scene
     def createCallbacks(self):
@@ -679,7 +690,7 @@ class ViewRenderOverride(omr.MRenderOverride):
     def setMaxBuffer(self, value):
         self.maxOnionSkinBufferSize = value
         while len(self.onionSkinBufferQueue) > self.maxOnionSkinBufferSize:
-            self.rotOldestOnion()
+            self.deleteOldestOnionSkinBuffer()
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
         
     # 

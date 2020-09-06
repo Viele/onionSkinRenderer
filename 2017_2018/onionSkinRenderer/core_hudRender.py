@@ -1,7 +1,7 @@
 import maya.api.OpenMayaRender as omr
 
 """
-Adding the last fancy doodads to your plate
+adding hud elements
 """
 class viewRenderHUDRender(omr.MHUDRender):
     def __init__(self):

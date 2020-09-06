@@ -2,16 +2,13 @@ import maya.api.OpenMaya as om
 import maya.api.OpenMayaRender as omr
 
 """
-This is the main tool of your workstation.
-In your workstation, you have TWO versions of that tool.
-The first version displays the ENTIRE vegetable heap.
-The second version ONLY displays the onions in that heap.
-It's like a super cool xRay to show your M how neatly
-you arranged those onions
+This renders the scene
+It is used twice, once to render normally
+and a second time to only render the objects specified by the user
 """
-class viewRenderSceneRender(omr.MSceneRender):
+class OSSceneRender(omr.MSceneRender):
     def __init__(self, name, clearMask):
-        super(viewRenderSceneRender,self).__init__(name, 'Onion')
+        super(OSSceneRender,self).__init__(name, 'Onion')
         self.clearMask = clearMask
         self.panelName = ""
         self.drawSelectionFilter = False
@@ -29,7 +26,7 @@ class viewRenderSceneRender(omr.MSceneRender):
             return self.onionObjectList
         return None
 
-    # called from viewRenderOverride which manages the list
+    # called from ViewRenderOverride which manages the list
     def setObjectFilterList(self, selectionList):
         self.onionObjectList = selectionList
 
