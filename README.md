@@ -14,7 +14,7 @@ https://gum.co/IDfYg
 
 
 ## Compatibility
-It is now tested and working with 2016, 2017, 2018 and 2019
+It is now tested and working with 2016, 2017, 2018 and 2019.
 Due to time constraints I will not work on this anymore, unless there are critical bugs that appear from the latest updates.
 
 ## How it works
