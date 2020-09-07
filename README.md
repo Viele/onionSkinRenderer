@@ -32,7 +32,10 @@ This plugin is an extension to the standard viewport2.0 renderer. When Maya Rend
 
 ## How to install
 Just copy the correct version to your scripts folder
+Windows:
 C:\Users\[username]\Documents\maya\scripts
+Mac:
+/Users/[UserName]/Library/Preferences/Autodesk/maya/2019/scripts
 
 so it should be like 
 C:\Users\[username]\Documents\maya\scripts\onionSkinRenderer\[all the files]
