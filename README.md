@@ -1,6 +1,6 @@
 # OnionSkinRenderer
 
-Hello there, I am an animator with some programming skills. If you are a programmer and roll your eyes going through my code, please point out any mistakes I made :)
+Hello there, I am a technical animator or animTD or whatever you want to call it.
 
 I started writing this script after I finished a 2D animation project. Going back to 3D I really missed
 the onion skinning features of 2D applications and wondered if it wouldn't be possible to have it in 3D.
@@ -14,7 +14,8 @@ https://gum.co/IDfYg
 
 
 ## Compatibility
-It is now tested and working with 2016, 2017 and 2018
+It is now tested and working with 2016, 2017, 2018 and 2019
+Due to time constraints I will not work on this anymore, unless there are critical bugs that appear from the latest updates.
 
 ## How it works
 This plugin is an extension to the standard viewport2.0 renderer. When Maya Renders a frame, a pass with the specified objects is created and stored. If you now tell the plugin to display information from another frame, it checks if that exists and if yes, draws it above the geometry.
@@ -22,11 +23,11 @@ This plugin is an extension to the standard viewport2.0 renderer. When Maya Rend
 ### Pros
 1. Independent of geometry complexity. Any polycount renders at the same speed.
 2. Relative Onion Display. It is easy to display the Onion Relative to the current position because it is all buffered.
-3. Actual display of the shape of the character on a different frame. Maya's internal onions (ghosting) cannot display skinned meshes, so you have to parent locators to it. Which is fine for tracking arcs but not to see how the shape moves through the scene.
+3. Actual display of the shape of the character on a different frame. Maya's internal onion skins (ghosting) cannot display skinned meshes, so you have to parent locators to it. Which is fine for tracking arcs but not to see how the shape moves through the scene.
 
 ### Cons
-1. Since the onions are buffered when the frame is rendered, moving the camera or any object invalidates them.
-2. Buffering alot of onions costs VRAM. If VRAM is full RAM is used which is a huge performance hit. That said, it shouldn't be an issue on any modern cards. My 3gb VRAM get me about 700 frames buffered on a 1080p screen. 
+1. Since the onion skins are buffered when the frame is rendered, moving the camera or any object invalidates them.
+2. Buffering alot of onion skins costs VRAM. If VRAM is full RAM is used which is a huge performance hit. That said, it shouldn't be an issue on any modern cards. My 3gb VRAM get me about 700 frames buffered on a 1080p screen. 
 
 
 ## How to install
@@ -40,22 +41,13 @@ C:\Users\[username]\Documents\maya\scripts\onionSkinRenderer\[all the files]
 ## How to use
 Open the UI with
 ```
-import onionSkinRenderer.onionSkinRendererWindow as onionWindow
-onionWindow.openOnionSkinRenderer()
+import onionSkinRenderer.controller as ctl
+ctl.show()
 ```
 
-or if you are on 2017 and up you have the option to make it dockable
+Docking support has been removed from the latest version because it was too unstable on Maya 2019
 
-```
-import onionSkinRenderer.onionSkinRendererWindow as onionWindow
-onionWindow.openOnionSkinRenderer(dockable=True)
-```
-
-With the UI open a new renderer appears (Onion Skin Renderer) in the dropdown where you can choose between Viewport 2.0 and Legacy Viewport. Select it.
-Select an object and add it to Onion Objects
+Select an object and add it to Onion Skin Objects
+Hit the toggle renderer button.
 For relative display, activate a frame with the 'v' button. For absolute add current or type a number.
 Scrub and as soon as the target onion is buffered it should be displayed.
-
-
-## Future plans
-1. I will do a refactor of the whole code and properly comment it.

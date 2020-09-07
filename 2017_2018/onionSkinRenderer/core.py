@@ -18,11 +18,10 @@ import onionSkinRenderer.core_sceneRender as sceneRender
 
 
 """
-This code is a render override for displaying onion skin overlays in the 3D viewport,
-which i will refer to as onions in further comments.
-It uses render targets to store the rendered onions. Unfortunately as of now it
-doesn't interactively update the onions on the fly. Instead it just saves the onion
-of the current frame and displays a saved onion from a different frame if available.
+This code is a render override for displaying onion skin overlays in the 3D viewport
+It uses render targets to store the rendered onion skins. Unfortunately as of now it
+doesn't interactively update the onion skins on the fly. Instead it just saves the onion skin
+of the current frame and displays a saved onion skin from a different frame if available.
 """
 
 
@@ -400,7 +399,7 @@ class ViewRenderOverride(omr.MRenderOverride):
     # -----------------
     # UTILITY FUNCTIONS
 
-    # reducing code duplicates by merging both add onion functions
+    # reducing code duplicates by merging both add target frame functions
     def addTargetFrame(self, frame, opacity, targetDict):
         if frame not in targetDict:
             targetDict[frame] = quadRender.OSQuadRender(
@@ -569,7 +568,7 @@ class ViewRenderOverride(omr.MRenderOverride):
                 blendPass.setFrame(frameIndex)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
     
-    # add a frame that is always displayed on the current position
+    # add a frame that is always displayed on the same position
     def addAbsoluteTargetFrame(self, frame, opacity):
         self.addTargetFrame(int(frame), opacity, self.absoluteBlendPasses)
     
