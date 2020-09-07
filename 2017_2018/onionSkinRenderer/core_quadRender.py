@@ -1,14 +1,12 @@
 import maya.api.OpenMayaRender as omr
 
-DEBUG = False
+DEBUG = True
 
 """
 This class is responsible for blending onion skins on top of the viewport
 Here the targets are assigned to the shader
 """
 class OSQuadRender(omr.MQuadRender):
-    kEffectNone = 0
-    kSceneBlend = 1
     
     kFileExtension = {
         omr.MRenderer.kOpenGL:'.cgfx',
@@ -16,7 +14,7 @@ class OSQuadRender(omr.MQuadRender):
         omr.MRenderer.kDirectX11: '.fx'
         }
 
-    def __init__(self, name, clearMask, frame):
+    def __init__(self, name, clearMask, frame, coreInstance):
 
         omr.MQuadRender.__init__(self, name)
 
@@ -28,8 +26,6 @@ class OSQuadRender(omr.MQuadRender):
         self.inputTarget = [None, None]
         self.stencilTarget = None
 
-        self.shaderType = self.kEffectNone
-
         self.frame = frame
 
         self.active = True
@@ -37,6 +33,8 @@ class OSQuadRender(omr.MQuadRender):
         self.tint = [1,1,1,1]
 
         self.opacity = 0.5
+
+        self.coreInstance = coreInstance
 
 
         
@@ -57,21 +55,20 @@ class OSQuadRender(omr.MQuadRender):
 
         if self.shaderInstance is None:
             shaderMgr = omr.MRenderer.getShaderManager()
-            if self.shader == self.kSceneBlend:
-                self.shaderInstance = shaderMgr.getEffectsFileShader(
-                    "onionSkinShader%s"%self.kFileExtension[omr.MRenderer.drawAPI()], 
-                    "Main", 
-                    useEffectCache = not kDebugQuadRender
-                    )
+            self.shaderInstance = shaderMgr.getEffectsFileShader(
+                "onionSkinShader%s"%self.kFileExtension[omr.MRenderer.drawAPI()], 
+                "Main", 
+                useEffectCache = False
+                )
         if self.shaderInstance is not None:
             self.shaderInstance.setParameter("gSourceTex", self.inputTarget[0])
             self.shaderInstance.setParameter("gSourceTex2", self.inputTarget[1])
-            self.shaderInstance.setParameter("gBlendSrc", self.opacity*viewRenderOverrideInstance.mGlobalOpacity)
+            self.shaderInstance.setParameter("gBlendSrc", self.opacity*self.coreInstance.globalOpacity)
             self.shaderInstance.setParameter("gTint", self.tint)
-            self.shaderInstance.setParameter("gType", viewRenderOverrideInstance.mOnionType)
-            self.shaderInstance.setParameter("gOutlineWidth", viewRenderOverrideInstance.mOutlineWidth)
+            self.shaderInstance.setParameter("gType", self.coreInstance.onionType)
+            self.shaderInstance.setParameter("gOutlineWidth", self.coreInstance.outlineWidth)
             self.shaderInstance.setParameter("gStencilTex", self.stencilTarget)
-            self.shaderInstance.setParameter("gDrawBehind", viewRenderOverrideInstance.mDrawBehind)
+            self.shaderInstance.setParameter("gDrawBehind", self.coreInstance.drawBehind)
 
         return self.shaderInstance
 
@@ -88,9 +85,6 @@ class OSQuadRender(omr.MQuadRender):
         if DEBUG: print("starting clear operation")
         self.mClearOperation.setMask(self.mClearMask)
         return self.mClearOperation
-
-    def setShader(self, shader):
-        self.shaderType = shader
 
     def setInputTargets(self, target1, target2):
         self.inputTarget[0] = target1

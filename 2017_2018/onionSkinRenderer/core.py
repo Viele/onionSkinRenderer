@@ -407,10 +407,10 @@ class ViewRenderOverride(omr.MRenderOverride):
             targetDict[frame] = quadRender.OSQuadRender(
                 'blendPass%s' % frame,
                 omr.MClearOperation.kClearNone,
-                int(frame)
+                int(frame),
+                OSR_INSTANCE
             )
             targetDict[frame].setOpacity(opacity/100.0)
-            targetDict[frame].setShader(quadRender.OSQuadRender.kSceneBlend)
             targetDict[frame].setRenderTarget(self.standardTarget)
 
             # insert operation after onion pass
