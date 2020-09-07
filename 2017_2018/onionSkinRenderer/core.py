@@ -90,6 +90,7 @@ def uninitializeOverride():
         if OSR_INSTANCE is not None:
             omr.MRenderer.deregisterOverride(OSR_INSTANCE)
             OSR_INSTANCE.deleteCallbacks()
+            OSR_INSTANCE.__del__()
             OSR_INSTANCE = None
     except:
         traceback.print_exc()
@@ -134,8 +135,6 @@ class ViewRenderOverride(omr.MRenderOverride):
         self.onionSkinBufferQueue = collections.deque()
         # max amount of buffered frames
         self.maxOnionSkinBufferSize = 200
-        # manages the display of the onion skin overlay, false means no overlay
-        self.enableBlend = False
         # store blend passes for relative onion skin display
         # a pass is stored when the user activates it in the ui with the "v" icon
         self.relativeBlendPasses = {}
@@ -158,7 +157,7 @@ class ViewRenderOverride(omr.MRenderOverride):
         # tint strengths, 1 is full tint
         self.tintStrength = 1.0
         self.globalOpacity = 1.0
-        self.onionType = 1
+        self.onionSkinDisplayType = 1
         # outline width in pixels
         self.outlineWidth = 3
         self.drawBehind = 1
@@ -245,7 +244,6 @@ class ViewRenderOverride(omr.MRenderOverride):
         self.targetMgr.releaseRenderTarget(self.standardTarget)
         self.targetMgr = None
         self.onionObjectList = None
-        self.mAnim = None
         
 
 
@@ -614,7 +612,7 @@ class ViewRenderOverride(omr.MRenderOverride):
 
 
     #
-    def setRelativeOpacity(self, frame, opacity):
+    def setOpacityForRelativeTargetFrame(self, frame, opacity):
         if int(frame) in self.relativeBlendPasses:
             self.relativeBlendPasses[int(frame)].setOpacity(opacity/100.0)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
@@ -624,7 +622,7 @@ class ViewRenderOverride(omr.MRenderOverride):
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     #
-    def setAbsoluteOpacity(self, frame, opacity):
+    def setOpacityForAbsoluteTargetFrame(self, frame, opacity):
         if frame in self.absoluteBlendPasses:
             self.absoluteBlendPasses[frame].setOpacity(opacity/100.0)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
@@ -703,8 +701,8 @@ class ViewRenderOverride(omr.MRenderOverride):
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     # 
-    def setOnionType(self, onionType):
-        self.onionType = onionType
+    def setOnionSkinDisplayMode(self, onionSkinDisplayType):
+        self.onionSkinDisplayType = onionSkinDisplayType
         self.refresh()
     
     # 

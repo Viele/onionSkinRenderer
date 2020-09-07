@@ -65,7 +65,7 @@ class OSQuadRender(omr.MQuadRender):
             self.shaderInstance.setParameter("gSourceTex2", self.inputTarget[1])
             self.shaderInstance.setParameter("gBlendSrc", self.opacity*self.coreInstance.globalOpacity)
             self.shaderInstance.setParameter("gTint", self.tint)
-            self.shaderInstance.setParameter("gType", self.coreInstance.onionType)
+            self.shaderInstance.setParameter("gType", self.coreInstance.onionSkinDisplayType)
             self.shaderInstance.setParameter("gOutlineWidth", self.coreInstance.outlineWidth)
             self.shaderInstance.setParameter("gStencilTex", self.stencilTarget)
             self.shaderInstance.setParameter("gDrawBehind", self.coreInstance.drawBehind)

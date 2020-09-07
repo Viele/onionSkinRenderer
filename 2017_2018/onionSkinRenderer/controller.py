@@ -135,13 +135,13 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
 
     #
     def createConnections(self):
-        self.targetObjects_add_btn.clicked.connect(self.addSelectedObjects)
-        self.targetObjects_remove_btn.clicked.connect(self.removeSelectedObjects)
+        self.targetObjects_add_btn.clicked.connect(self.addSelectedToTargetObjects)
+        self.targetObjects_remove_btn.clicked.connect(self.removeSelectedFromTargetObjects)
         self.targetObjects_clear_btn.clicked.connect(self.clearTargetObjects)
 
         self.toggleRenderer_btn.clicked.connect(self.toggleRenderer)
         self.globalOpacity_slider.sliderMoved.connect(self.setGlobalOpacity)
-        self.onionType_cBox.currentTextChanged.connect(self.setOnionType)
+        self.onionType_cBox.currentTextChanged.connect(self.setOnionSkinDisplayMode)
         self.drawBehind_chkBx.stateChanged.connect(self.setDrawBehind)
 
         self.tint_type_cBox.currentTextChanged.connect(self.setTintType)
@@ -152,9 +152,9 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         self.relative_step_spinBox.valueChanged.connect(self.setRelativeStep)
 
         self.absolute_tint_btn.clicked.connect(self.pickColor)
-        self.absolute_addCrnt_btn.clicked.connect(self.addAbsoluteFrame)
-        self.absolute_add_btn.clicked.connect(self.addAbsoluteFrameFromSpinbox)
-        self.absolute_clear_btn.clicked.connect(self.clearAbsoluteFrames)
+        self.absolute_addCrnt_btn.clicked.connect(self.addAbsoluteTargetFrame)
+        self.absolute_add_btn.clicked.connect(self.addAbsoluteTargetFrameFromSpinbox)
+        self.absolute_clear_btn.clicked.connect(self.clearAbsoluteTargetFrames)
 
         self.settings_clearBuffer.triggered.connect(self.clearBuffer)
         self.settings_autoClearBuffer.triggered.connect(self.setAutoClearBuffer)
@@ -198,11 +198,11 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
                 frame = index-self.relativeFrameCount/2
                 listWidget.frame_number.setText(str(frame))
                 listWidget.frame_opacity_slider.setValue(75/abs(index-self.relativeFrameCount/2))
-                listWidget.frame_visibility_btn.toggled.connect(self.toggleRelativeFrame)
+                listWidget.frame_visibility_btn.toggled.connect(self.toggleRelativeTargetFrame)
                 if frame in activeFrames: 
                     listWidget.frame_visibility_btn.setChecked(True)
                     activeFrames.remove(frame)
-                listWidget.frame_opacity_slider.sliderMoved.connect(self.setRelativeOpacity)
+                listWidget.frame_opacity_slider.sliderMoved.connect(self.setOpacityForRelativeTargetFrame)
                 self.relative_frame_layout.addWidget(listWidget)
 
         # remove all remaining frames from onion skin renderer
@@ -211,7 +211,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
             core.OSR_INSTANCE.removeRelativeOnion(frame)
 
     # 
-    def refreshAbsoluteList(self):
+    def refreshAbsoluteFrameTargetsList(self):
         # remove any entries that don't exist anymore
         framesInList = []
         for i in reversed(xrange(self.absolute_list.count())):
@@ -228,9 +228,9 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
                 listWidget.frame_opacity_slider.setValue(core.OSR_INSTANCE.getOpacityOfAbsoluteFrame(int(frame)))
                 listWidget.addRemoveButton()
                 listWidget.frame_visibility_btn.setChecked(core.OSR_INSTANCE.absoluteTargetFrameExists(int(frame)))
-                listWidget.frame_remove_btn.clicked.connect(lambda b_frame = frame: self.removeAbsoluteFrame(b_frame))
-                listWidget.frame_visibility_btn.toggled.connect(self.toggleAbsoluteFrame)
-                listWidget.frame_opacity_slider.sliderMoved.connect(self.setAbsoluteOpacity)
+                listWidget.frame_remove_btn.clicked.connect(lambda b_frame = frame: self.removeAbsoluteTargetFrame(b_frame))
+                listWidget.frame_visibility_btn.toggled.connect(self.toggleAbsoluteTargetFrame)
+                listWidget.frame_opacity_slider.sliderMoved.connect(self.setOpacityForAbsoluteTargetFrame)
                 listItem = QtWidgets.QListWidgetItem()
                 listItem.setData(QtCore.Qt.UserRole, int(frame))
                 listItem.setSizeHint(listWidget.sizeHint())
@@ -251,14 +251,14 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
     # CONNECTIONS
 
     # 
-    def addSelectedObjects(self):
+    def addSelectedToTargetObjects(self):
         core.OSR_INSTANCE.addSelectedTargetObject()
         for obj in pm.selected():
             self.targetObjectsSet.add(obj)
         self.refreshObjectList()
     
     # 
-    def removeSelectedObjects(self):
+    def removeSelectedFromTargetObjects(self):
         core.OSR_INSTANCE.removeSelectedTargetObject()
         for obj in pm.selected():
             if obj in self.targetObjectsSet:
@@ -281,7 +281,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         self.refreshObjectList()
 
     # 
-    def toggleRelativeFrame(self):
+    def toggleRelativeTargetFrame(self):
         sender = self.sender()
         frame = sender.parent().findChild(QtWidgets.QLabel, 'frame_number').text()
         sliderValue = sender.parent().findChild(QtWidgets.QSlider, 'frame_opacity_slider').value()
@@ -297,20 +297,20 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         self.saveSettings()
 
     # 
-    def addAbsoluteFrame(self, **kwargs):
+    def addAbsoluteTargetFrame(self, **kwargs):
         frame = kwargs.setdefault('frame', pm.animation.getCurrentTime())
         if int(frame) not in self.absoluteFramesSet:
             core.OSR_INSTANCE.addAbsoluteTargetFrame(frame, 50)
             self.absoluteFramesSet.add(frame)
-            self.refreshAbsoluteList()
+            self.refreshAbsoluteFrameTargetsList()
 
     #
-    def addAbsoluteFrameFromSpinbox(self):
+    def addAbsoluteTargetFrameFromSpinbox(self):
         frame = self.sender().parent().findChild(QtWidgets.QSpinBox, 'absolute_add_spinBox').value()
-        self.addAbsoluteFrame(frame = frame)
+        self.addAbsoluteTargetFrame(frame = frame)
 
     #
-    def toggleAbsoluteFrame(self):
+    def toggleAbsoluteTargetFrame(self):
         sender = self.sender()
         frame = sender.parent().findChild(QtWidgets.QLabel, 'frame_number').text()
         sliderValue = sender.parent().findChild(QtWidgets.QSlider, 'frame_opacity_slider').value()
@@ -320,16 +320,16 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
             core.OSR_INSTANCE.removeAbsoluteTargetFrame(frame)
     
     #
-    def removeAbsoluteFrame(self, frame):
+    def removeAbsoluteTargetFrame(self, frame):
         core.OSR_INSTANCE.removeAbsoluteTargetFrame(frame)
         self.absoluteFramesSet.remove(frame)
-        self.refreshAbsoluteList()
+        self.refreshAbsoluteFrameTargetsList()
 
     #
-    def clearAbsoluteFrames(self):
+    def clearAbsoluteTargetFrames(self):
         core.OSR_INSTANCE.clearAbsoluteTargetFrames()
         self.absoluteFramesSet.clear()
-        self.refreshAbsoluteList()
+        self.refreshAbsoluteFrameTargetsList()
 
     # 
     def clearBuffer(self):
@@ -339,20 +339,20 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
     def pickColor(self):
         color = QtWidgets.QColorDialog.getColor()
         if color.isValid():
-            self.setOnionColor(self.sender(), color.getRgb())
+            self.setOnionSkinColor(self.sender(), color.getRgb())
         self.saveSettings()
 
     #
-    def setRelativeOpacity(self):
+    def setOpacityForRelativeTargetFrame(self):
         opacity = self.sender().value()
         frame = self.sender().parent().findChild(QtWidgets.QLabel, 'frame_number').text()
-        core.OSR_INSTANCE.setRelativeOpacity(frame, opacity)
+        core.OSR_INSTANCE.setOpacityForRelativeTargetFrame(frame, opacity)
 
     #
-    def setAbsoluteOpacity(self):
+    def setOpacityForAbsoluteTargetFrame(self):
         opacity = self.sender().value()
         frame = self.sender().parent().findChild(QtWidgets.QLabel, 'frame_number').text()
-        core.OSR_INSTANCE.setAbsoluteOpacity(int(frame), opacity)
+        core.OSR_INSTANCE.setOpacityForAbsoluteTargetFrame(int(frame), opacity)
 
     # 
     def setTintStrength(self):
@@ -432,8 +432,8 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         core.OSR_INSTANCE.setGlobalOpacity(self.sender().value())
 
     #
-    def setOnionType(self):
-        core.OSR_INSTANCE.setOnionType(self.onionType_cBox.currentIndex())
+    def setOnionSkinDisplayMode(self):
+        core.OSR_INSTANCE.setOnionSkinDisplayMode(self.onionType_cBox.currentIndex())
 
     #
     def setDrawBehind(self):
@@ -466,7 +466,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
 
     # UTILITY
     # 
-    def setOnionColor(self, btn, rgba):
+    def setOnionSkinColor(self, btn, rgba):
             btn.setStyleSheet('background-color: rgb(%s,%s,%s);'%(rgba[0], rgba[1], rgba[2]))
             core.OSR_INSTANCE.setTint(rgba, btn.objectName())
 
@@ -480,9 +480,9 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
             self.relative_keyframes_chkbx.setChecked(self.preferences.setdefault('displayKeyframes',True))
             core.OSR_INSTANCE.setRelativeDisplayMode(self.preferences.setdefault('displayKeyframes',True))
 
-            self.setOnionColor(self.relative_futureTint_btn, self.preferences.setdefault('rFutureTint',[0,0,125]))
-            self.setOnionColor(self.relative_pastTint_btn, self.preferences.setdefault('rPastTint',[0,125,0]))
-            self.setOnionColor(self.absolute_tint_btn, self.preferences.setdefault('aTint', [125,0,0]))
+            self.setOnionSkinColor(self.relative_futureTint_btn, self.preferences.setdefault('rFutureTint',[0,0,125]))
+            self.setOnionSkinColor(self.relative_pastTint_btn, self.preferences.setdefault('rPastTint',[0,125,0]))
+            self.setOnionSkinColor(self.absolute_tint_btn, self.preferences.setdefault('aTint', [125,0,0]))
             core.OSR_INSTANCE.setTintSeed(self.preferences.setdefault('tintSeed', 0))
             self.tint_type_cBox.setCurrentIndex(self.preferences.setdefault('tintType',0))
 
