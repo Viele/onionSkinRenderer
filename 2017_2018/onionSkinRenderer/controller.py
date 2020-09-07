@@ -1,4 +1,5 @@
 import pymel.core as pm
+import maya.cmds as cmds
 import os
 import json
 import inspect
@@ -67,7 +68,10 @@ def show(develop = False, dockable = False):
         pass
     
     OSR_WINDOW = OSRController()
-    OSR_WINDOW.show(dockable = dockable)
+    # if somebody reads this because they want to make it dockable
+    # please contact me. I'd like to have it dockable as well
+    # but it just never works
+    OSR_WINDOW.show(dockable = False)
     
 
 
@@ -119,19 +123,16 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
     # special event for the dockable feature
     def dockCloseEventTriggered(self, event):
         if DEBUG_ALL: print 'dock close event start'
-        try:
-            self.saveSettings()
-        except Exception as e:
-            print e
+        self.saveSettings()
         core.uninitializeOverride()
         if DEBUG_ALL: print 'dock close event end'
 
     # code from https://gist.github.com/liorbenhorin/217bfb7e54c6f75b9b1b2b3d73a1a43a
     def deleteControl(self, control):
         if DEBUG_ALL: print 'delete Control'
-        if pm.workspaceControl(control, q=True, exists=True):
-            pm.workspaceControl(control, e=True, close=True)
-            pm.deleteUI(control, control=True)
+        if cmds.workspaceControl(control, q=True, exists=True):
+            cmds.workspaceControl(control, e=True, close=True)
+            cmds.deleteUI(control, control=True)
 
     #
     def createConnections(self):

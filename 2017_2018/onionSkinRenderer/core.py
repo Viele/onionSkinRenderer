@@ -34,7 +34,7 @@ Constants & Debug Variables
 When something goes wrong, turning these on will
 dump info in the script editor
 """
-DEBUG = True
+DEBUG = False
 PLUGIN_NAME = "Onion Skin Renderer"
 
 
@@ -241,7 +241,8 @@ class ViewRenderOverride(omr.MRenderOverride):
         # delete the targets, otherwise the target manager might
         # return None when asked for a target that already exists
         self.clearOnionSkinBuffer()
-        self.targetMgr.releaseRenderTarget(self.standardTarget)
+        if self.standardTarget:
+            self.targetMgr.releaseRenderTarget(self.standardTarget)
         self.targetMgr = None
         self.onionObjectList = None
         

@@ -1,6 +1,6 @@
 import maya.api.OpenMayaRender as omr
 
-DEBUG = True
+DEBUG = False
 
 """
 This class is responsible for blending onion skins on top of the viewport
