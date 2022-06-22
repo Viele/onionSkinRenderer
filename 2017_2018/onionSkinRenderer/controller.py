@@ -1,8 +1,10 @@
+import inspect
+import json
+import os
+import sys
+
 import pymel.core as pm
 import maya.cmds as cmds
-import os
-import json
-import inspect
 from PySide2 import QtWidgets, QtCore
 import maya.OpenMayaUI as omui
 from shiboken2 import wrapInstance
@@ -22,7 +24,7 @@ import onionSkinRenderer.core_sceneRender as sceneRender
 
 
 '''
-2017, 2018 and 2019 Version
+2017, 2018 and 2019, 2022 Version
 using pyside2
 '''
 
@@ -33,6 +35,9 @@ Naming Conventions:
     osr: abbreviation for onion skin renderer
 '''
 
+if sys.version_info[0] >= 3:
+    from imp import reload
+    long = int
 
 DEBUG_ALL = False
 
@@ -49,6 +54,9 @@ OSR_WINDOW = None
 
 # convenient function to open the osr ui
 def show(develop = False, dockable = False):
+    # Necessary so that the garbage collector's itchy trigger finger won't blow away
+    # the window before it can even be shown.
+    global OSR_WINDOW
 
     if develop:
         reload(core)
@@ -66,10 +74,6 @@ def show(develop = False, dockable = False):
         OSR_WINDOW.close()
     except:
         pass
-
-    # Necessary so that the garbage collector's itchy trigger finger won't blow away
-    # the window before it can even be shown.
-    global OSR_WINDOW
 
     OSR_WINDOW = OSRController()
     # if somebody reads this because they want to make it dockable
@@ -119,21 +123,21 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
     #
     def closeEvent(self, event):
         # when the UI is closed, deactivate the override
-        if DEBUG_ALL: print 'close event start'
+        if DEBUG_ALL: print('close event start')
         self.saveSettings()
         core.uninitializeOverride()
-        if DEBUG_ALL: print 'close event end'
+        if DEBUG_ALL: print('close event end')
 
     # special event for the dockable feature
     def dockCloseEventTriggered(self, event):
-        if DEBUG_ALL: print 'dock close event start'
+        if DEBUG_ALL: print('dock close event start')
         self.saveSettings()
         core.uninitializeOverride()
-        if DEBUG_ALL: print 'dock close event end'
+        if DEBUG_ALL: print('dock close event end')
 
     # code from https://gist.github.com/liorbenhorin/217bfb7e54c6f75b9b1b2b3d73a1a43a
     def deleteControl(self, control):
-        if DEBUG_ALL: print 'delete Control'
+        if DEBUG_ALL: print('delete Control')
         if cmds.workspaceControl(control, q=True, exists=True):
             cmds.workspaceControl(control, e=True, close=True)
             cmds.deleteUI(control, control=True)
@@ -193,7 +197,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         # clear the frame of all widgets first
         for child in self.relative_frame.findChildren(OnionListFrame):
             if child.frame_visibility_btn.isChecked():
-                activeFrames.append(int(child.frame_number.text()))
+                activeFrames.append(int(float(child.frame_number.text())))
             child.setParent(None)
 
         # fill the relative frames list
@@ -413,7 +417,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
                 self.activeEditor = onionPanel
             except Exception as e:
                 # Handle exception
-                print e
+                print(e)
         else:
             # if there is a saved editor panel activate the renderer on it
             if self.activeEditor:
@@ -429,7 +433,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
                                 pm.uitypes.ModelEditor(modelPanel).setRendererOverrideName('')
                         except Exception as e:
                             # Handle exception
-                            print e
+                            print(e)
 
 
     #
@@ -499,7 +503,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
             self.refreshRelativeFrame()
             activeRelativeFrames = self.preferences.setdefault('activeRelativeFrames',[])
             for child in self.relative_frame.findChildren(OnionListFrame):
-                if int(child.frame_number.text()) in activeRelativeFrames:
+                if int(float(child.frame_number.text())) in activeRelativeFrames:
                     child.frame_visibility_btn.setChecked(True)
 
             self.relative_step_spinBox.setValue(self.preferences.setdefault('relativeStep', 1))
@@ -510,7 +514,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
 
     # save values into a json file
     def saveSettings(self):
-        if DEBUG_ALL: print 'start save'
+        if DEBUG_ALL: print('start save')
         data = {}
         data['autoClearBuffer'] = self.settings_autoClearBuffer.isChecked()
         data['displayKeyframes'] = self.relative_keyframes_chkbx.isChecked()
@@ -529,7 +533,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
 
         with open(os.path.join(self.toolPath,'settings.txt'), 'w') as outfile:
             json.dump(data, outfile)
-        if DEBUG_ALL: print 'end save'
+        if DEBUG_ALL: print('end save')
 
     #
     def extractRGBFromStylesheet(self, s):
@@ -540,7 +544,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         # clear the frame of all widgets first
         for child in self.relative_frame.findChildren(OnionListFrame):
             if child.frame_visibility_btn.isChecked():
-                activeFrames.append(int(child.frame_number.text()))
+                activeFrames.append(int(float(child.frame_number.text())))
         return activeFrames
 
 
