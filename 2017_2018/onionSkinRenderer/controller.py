@@ -224,7 +224,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
     def refreshAbsoluteFrameTargetsList(self):
         # remove any entries that don't exist anymore
         framesInList = []
-        for i in reversed(xrange(self.absolute_list.count())):
+        for i in reversed(range(self.absolute_list.count())):
             frame = self.absolute_list.item(i).data(QtCore.Qt.UserRole)
             framesInList.append(frame)
             if frame not in self.absoluteFramesSet:
@@ -246,7 +246,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
                 listItem.setSizeHint(listWidget.sizeHint())
                 # insert item at correct position
                 correctRow = 0
-                for i in xrange(self.absolute_list.count()):
+                for i in range(self.absolute_list.count()):
                     if frame < self.absolute_list.item(i).data(QtCore.Qt.UserRole):
                         break
                     correctRow = i+1
