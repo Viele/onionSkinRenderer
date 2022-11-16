@@ -91,8 +91,11 @@ This class is the main ui window. It manages all user events and links to the co
 class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.Ui_onionSkinRenderer):
 
     #
-    def __init__(self, parent = getMayaMainWindow()):
-        super(OSRController, self).__init__(parent)
+    def __init__(self, parent=None):
+        super(OSRController, self).__init__(parent=parent)
+        if not parent:
+            self.setParent(getMayaMainWindow())
+
         # the dockable feature creates this control that needs to be deleted manually
         # otherwise it throws an error that this name already exists
         self.deleteControl('onionSkinRendererWorkspaceControl')
@@ -114,6 +117,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         # create the ui from the compiled qt designer file
         self.setupUi(self)
 
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.Window)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.createConnections()
@@ -543,7 +547,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
 
     #
     def extractRGBFromStylesheet(self, s):
-        return map(int,(s[s.find("(")+1:s.find(")")]).split(','))
+        return list(map(int,(s[s.find("(")+1:s.find(")")]).split(',')))
 
     def getActiveRelativeFrameIndices(self):
         activeFrames = []
