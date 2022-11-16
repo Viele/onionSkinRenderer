@@ -40,6 +40,7 @@ if sys.version_info[0] >= 3:
     long = int
 
 DEBUG_ALL = False
+SETTINGS_FILE_NAME = 'onionSkinRender.json'
 
 
 # wrapper to get mayas main window
@@ -107,7 +108,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         self.absoluteFramesSet = set()
         self.preferences = {}
         self.relativeFrameCount = 8
-        self.toolPath = os.path.dirname(os.path.abspath(inspect.stack()[0][1]))
+        self.toolPath = os.path.join(cmds.internalVar(userAppDir=True), 'scripts')
         self.activeEditor = None
 
         # create the ui from the compiled qt designer file
@@ -481,35 +482,40 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
 
     #
     def loadSettings(self):
-        with open(os.path.join(self.toolPath,'settings.txt')) as json_file:
-            self.preferences = json.load(json_file)
-            self.settings_autoClearBuffer.setChecked(self.preferences.setdefault('autoClearBuffer',True))
-            core.OSR_INSTANCE.setAutoClearBuffer(self.preferences.setdefault('autoClearBuffer',True))
+        settings_path = os.path.join(self.toolPath, SETTINGS_FILE_NAME)
+        if os.path.isfile(settings_path):
+            with open(settings_path) as json_file:
+                try:
+                    self.preferences = json.load(json_file)
+                except json.decoder.JSONDecodeError as e:
+                    print('Error decoding settings', e)
+        self.settings_autoClearBuffer.setChecked(self.preferences.setdefault('autoClearBuffer',True))
+        core.OSR_INSTANCE.setAutoClearBuffer(self.preferences.setdefault('autoClearBuffer',True))
 
-            self.relative_keyframes_chkbx.setChecked(self.preferences.setdefault('displayKeyframes',True))
-            core.OSR_INSTANCE.setRelativeDisplayMode(self.preferences.setdefault('displayKeyframes',True))
+        self.relative_keyframes_chkbx.setChecked(self.preferences.setdefault('displayKeyframes',True))
+        core.OSR_INSTANCE.setRelativeDisplayMode(self.preferences.setdefault('displayKeyframes',True))
 
-            self.setOnionSkinColor(self.relative_futureTint_btn, self.preferences.setdefault('rFutureTint',[0,0,125]))
-            self.setOnionSkinColor(self.relative_pastTint_btn, self.preferences.setdefault('rPastTint',[0,125,0]))
-            self.setOnionSkinColor(self.absolute_tint_btn, self.preferences.setdefault('aTint', [125,0,0]))
-            core.OSR_INSTANCE.setTintSeed(self.preferences.setdefault('tintSeed', 0))
-            self.tint_type_cBox.setCurrentIndex(self.preferences.setdefault('tintType',0))
+        self.setOnionSkinColor(self.relative_futureTint_btn, self.preferences.setdefault('rFutureTint',[0,0,125]))
+        self.setOnionSkinColor(self.relative_pastTint_btn, self.preferences.setdefault('rPastTint',[0,125,0]))
+        self.setOnionSkinColor(self.absolute_tint_btn, self.preferences.setdefault('aTint', [125,0,0]))
+        core.OSR_INSTANCE.setTintSeed(self.preferences.setdefault('tintSeed', 0))
+        self.tint_type_cBox.setCurrentIndex(self.preferences.setdefault('tintType',0))
 
 
-            self.onionType_cBox.setCurrentIndex(self.preferences.setdefault('onionType',1))
-            self.drawBehind_chkBx.setChecked(self.preferences.setdefault('drawBehind', True))
+        self.onionType_cBox.setCurrentIndex(self.preferences.setdefault('onionType',1))
+        self.drawBehind_chkBx.setChecked(self.preferences.setdefault('drawBehind', True))
 
-            self.relativeFrameCount = self.preferences.setdefault('relativeFrameAmount',4)
-            self.refreshRelativeFrame()
-            activeRelativeFrames = self.preferences.setdefault('activeRelativeFrames',[])
-            for child in self.relative_frame.findChildren(OnionListFrame):
-                if int(float(child.frame_number.text())) in activeRelativeFrames:
-                    child.frame_visibility_btn.setChecked(True)
+        self.relativeFrameCount = self.preferences.setdefault('relativeFrameAmount',4)
+        self.refreshRelativeFrame()
+        activeRelativeFrames = self.preferences.setdefault('activeRelativeFrames',[])
+        for child in self.relative_frame.findChildren(OnionListFrame):
+            if int(float(child.frame_number.text())) in activeRelativeFrames:
+                child.frame_visibility_btn.setChecked(True)
 
-            self.relative_step_spinBox.setValue(self.preferences.setdefault('relativeStep', 1))
+        self.relative_step_spinBox.setValue(self.preferences.setdefault('relativeStep', 1))
 
-            core.OSR_INSTANCE.setMaxBuffer(self.preferences.setdefault('maxBufferSize', 200))
-            core.OSR_INSTANCE.setOutlineWidth(self.preferences.setdefault('outlineWidth',3))
+        core.OSR_INSTANCE.setMaxBuffer(self.preferences.setdefault('maxBufferSize', 200))
+        core.OSR_INSTANCE.setOutlineWidth(self.preferences.setdefault('outlineWidth',3))
 
 
     # save values into a json file
@@ -531,7 +537,7 @@ class OSRController(MayaQWidgetDockableMixin, QtWidgets.QMainWindow, ui_window.U
         data['drawBehind'] = self.drawBehind_chkBx.isChecked()
         data['activeRelativeFrames'] = self.getActiveRelativeFrameIndices()
 
-        with open(os.path.join(self.toolPath,'settings.txt'), 'w') as outfile:
+        with open(os.path.join(self.toolPath, SETTINGS_FILE_NAME), 'w') as outfile:
             json.dump(data, outfile)
         if DEBUG_ALL: print('end save')
 
