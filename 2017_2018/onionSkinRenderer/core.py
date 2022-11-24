@@ -68,7 +68,7 @@ doesn't finish the unitializeOverride() function, you need to restart maya for i
 '''
 
 def initializeOverride():
-    if DEBUG: print 'initialize Renderer'
+    if DEBUG: print('initialize Renderer')
     try:
         # register the path to the plugin
         omr.MRenderer.getShaderManager().addShaderPath(os.path.dirname(os.path.abspath(inspect.stack()[0][1])))
@@ -83,7 +83,7 @@ def initializeOverride():
 
 # un-init
 def uninitializeOverride():
-    if DEBUG: print 'unitiliazide Renderer'
+    if DEBUG: print('unitiliazide Renderer')
     try:
         global OSR_INSTANCE
         if OSR_INSTANCE is not None:
@@ -112,7 +112,7 @@ class ViewRenderOverride(omr.MRenderOverride):
     # constructor
     def __init__(self, name):
         if DEBUG:
-            print ("Initializing ViewRenderOverride")
+            print("Initializing ViewRenderOverride")
 
         #omr.MRenderOverride.__init__(self, name)
         super(ViewRenderOverride, self).__init__(name)
@@ -231,7 +231,7 @@ class ViewRenderOverride(omr.MRenderOverride):
     # destructor
     def __del__(self):
         if DEBUG:
-            print ("Deleting ViewRenderOverride")
+            print("Deleting ViewRenderOverride")
         self.clearPass = None
         self.standardPass = None
         self.HUDPass = None
@@ -259,7 +259,7 @@ class ViewRenderOverride(omr.MRenderOverride):
     # it is called by maya every refresh of the screen and handles the passes
     def setup(self, destination):
         if DEBUG:
-            print ("Starting setup")
+            print("Starting setup")
         # set the size of the target, so when the viewport scales,
         # the targets remain a 1:1 pixel size
         targetSize = omr.MRenderer.outputTargetSize()
@@ -405,7 +405,7 @@ class ViewRenderOverride(omr.MRenderOverride):
             targetDict[frame] = quadRender.OSQuadRender(
                 'blendPass%s' % frame,
                 omr.MClearOperation.kClearNone,
-                int(frame),
+                int(float(frame)),
                 OSR_INSTANCE
             )
             targetDict[frame].setOpacity(opacity/100.0)
@@ -552,11 +552,11 @@ class ViewRenderOverride(omr.MRenderOverride):
 
     # add a frame to display relative to current time slider position
     def addRelativeTargetFrame(self, frame, opacity):
-        self.addTargetFrame(int(frame), opacity, self.relativeBlendPasses)
+        self.addTargetFrame(int(float(frame)), opacity, self.relativeBlendPasses)
 
     #
     def removeRelativeTargetFrame(self, frame):
-        self.removeTargetFrame(int(frame), self.relativeBlendPasses)
+        self.removeTargetFrame(int(float(frame)), self.relativeBlendPasses)
 
     def setRelativeDisplayMode(self, value):
         self.relativeKeyDisplay = value
@@ -570,11 +570,11 @@ class ViewRenderOverride(omr.MRenderOverride):
     
     # add a frame that is always displayed on the same position
     def addAbsoluteTargetFrame(self, frame, opacity):
-        self.addTargetFrame(int(frame), opacity, self.absoluteBlendPasses)
+        self.addTargetFrame(int(float(frame)), opacity, self.absoluteBlendPasses)
     
     #
     def removeAbsoluteTargetFrame(self, frame):
-        self.removeTargetFrame(int(frame), self.absoluteBlendPasses)
+        self.removeTargetFrame(int(float(frame)), self.absoluteBlendPasses)
 
     #
     def clearAbsoluteTargetFrames(self):
@@ -613,8 +613,8 @@ class ViewRenderOverride(omr.MRenderOverride):
 
     #
     def setOpacityForRelativeTargetFrame(self, frame, opacity):
-        if int(frame) in self.relativeBlendPasses:
-            self.relativeBlendPasses[int(frame)].setOpacity(opacity/100.0)
+        if int(float(frame)) in self.relativeBlendPasses:
+            self.relativeBlendPasses[int(float(frame))].setOpacity(opacity/100.0)
         omui.M3dView.refresh(omui.M3dView.active3dView(), all=True)
 
     def setGlobalOpacity(self, opacity):
